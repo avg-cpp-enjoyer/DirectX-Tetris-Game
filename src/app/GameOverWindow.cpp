@@ -55,14 +55,14 @@ void GameOverWindow::CreateButtons() {
 	using namespace UI::GameOver;
 	using namespace UI::General;
 
-	m_restartButton = std::make_unique<Button>(m_window, L"Restart", restartRect, uiCornerRad,
+	m_restartButton = std::make_unique<ButtonComponent>(m_window, L"Restart", restartRect, uiCornerRad,
 		false, textColor, borderColor, btnClrDefault,
-		btnClrClicked, btnClrHovered, m_graphicsDevice.TextFormat(), m_graphicsDevice.Context()
+		btnClrClicked, btnClrHovered, m_graphicsDevice.TextFormat(), m_graphicsDevice
 	);
 
-	m_quitButton = std::make_unique<Button>(m_window, L"Quit", quitRect, uiCornerRad,
+	m_quitButton = std::make_unique<ButtonComponent>(m_window, L"Quit", quitRect, uiCornerRad,
 		false, textColor, borderColor, btnClrDefault,
-		btnClrClicked, btnClrHovered, m_graphicsDevice.TextFormat(), m_graphicsDevice.Context()
+		btnClrClicked, btnClrHovered, m_graphicsDevice.TextFormat(), m_graphicsDevice
 	);
 
 	m_restartButton->SetOnClick([this]() {

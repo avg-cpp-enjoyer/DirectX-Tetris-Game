@@ -2,6 +2,7 @@
 
 #include "core/RingBuffer.hpp"
 #include "model/GameField.hpp"
+#include "engine/Scene.hpp"
 
 #include <chrono>
 #include <thread>
@@ -22,7 +23,10 @@ public:
 	bool PauseGame();
 	void OnDrop();
 	GameField& GetGameField();
-	void RegisterGameOverCallback(std::function<void()> callback);
+	std::atomic<bool>& GetPengingLock();
+	void SetGameOverCallback(std::function<void()> callback);
+	void SetUISceneCallback(std::function<Scene&()> callback);
+	void SetGameSceneCallback(std::function<Scene&()> callback);
 	void GravityStep();
 	void StopExecution();
 	void Restart();
@@ -35,7 +39,9 @@ private:
 	GameField                  m_gameField;
 	std::mutex                 m_gameFieldMutex;
 	std::atomic<bool>          m_pendingLock{ false };
-	std::function<void()>      m_onGameOver;
 	std::thread                m_logicThread;
+	std::function<void()>      m_GameOverCallback;
+	std::function<Scene&()>    m_UISceneCallback;
+	std::function<Scene&()>    m_GameSceneCallback;
 	std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> m_nextTick;
 };

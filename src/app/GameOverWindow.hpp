@@ -37,8 +37,8 @@ private:
 	int   m_highScore;
 	bool  m_restart = false;
 
-	GraphicsDevice              m_graphicsDevice;
-	std::unique_ptr<IComponent> m_bgComponent;
-	std::unique_ptr<Button>     m_restartButton;
-	std::unique_ptr<Button>     m_quitButton;
+	GraphicsDevice                    m_graphicsDevice;
+	std::unique_ptr<GOBgComponent>    m_bgComponent;
+	std::unique_ptr<ButtonComponent>  m_restartButton;
+	std::unique_ptr<ButtonComponent>  m_quitButton;
 };

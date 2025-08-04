@@ -1,5 +1,16 @@
 ﻿#include "TetrisWindow.hpp"
 
+TetrisWindow::TetrisWindow() {
+	timeBeginPeriod(1);
+	HR_LOG(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
+	UI::Init();
+}
+
+TetrisWindow::~TetrisWindow() noexcept {
+	CoUninitialize();
+	timeEndPeriod(1);
+}
+
 const wchar_t* TetrisWindow::ClassName() const {
 	return L"TetrisWindowClass";
 }
@@ -93,10 +104,12 @@ bool TetrisWindow::CreateGameOverWindow() {
 
 void TetrisWindow::OnCreate() {
 	m_graphicsDevice.Initialize(m_window);
-	m_gameController.RegisterGameOverCallback([window = this->m_window]() { PostMessageW(window, WM_APP_GAMEOVER, 0, 0); });
+	m_gameController.SetGameOverCallback([this]() { PostMessageW(m_window, WM_APP_GAMEOVER, 0, 0); });
+	m_gameController.SetUISceneCallback([this]() -> Scene& { return m_renderer->GetUIScene(); });
+	m_gameController.SetGameSceneCallback([this]() -> Scene& { return m_renderer->GetGameScene(); });
 
 	m_renderer = std::make_unique<Renderer>(m_graphicsDevice.Context(), m_graphicsDevice.SwapChain(), m_graphicsDevice.DCompDevice());
-	m_renderer->RegisterDropCallback(std::bind(&GameController::OnDrop, &m_gameController));
+	m_renderer->SetDropCallback(std::bind(&GameController::OnDrop, &m_gameController));
 	m_renderer->AttachGameField(m_gameController.GetGameField(), m_gameController.GetGfMutex());
 	
 	m_builder = std::make_unique<SceneBuilder>(*m_renderer, m_gameController, m_graphicsDevice, m_window);

@@ -16,18 +16,26 @@ void RectComponent::Draw() const {
 }
 
 BgComponent::BgComponent(const GraphicsDevice& device)
-	: RectComponent(device.Context(),
+	: Component(device), m_bgRect(device.Context(),
 		device.GetBrush(GraphicsDevice::BrushType::Background),
 		device.GetBrush(GraphicsDevice::BrushType::Border),
 		UI::MainWindow::d2dWindowRect) 
 {}
 
-GridComponent::GridComponent(const GraphicsDevice& device)
-	: RectComponent(device.Context(),
+void BgComponent::Draw() const {
+	m_bgRect.Draw();
+}
+
+GridComponent::GridComponent(const GraphicsDevice& device) : 
+	Component(device), m_gridRect(device.Context(),
 		device.GetBrush(GraphicsDevice::BrushType::Background),
 		device.GetBrush(GraphicsDevice::BrushType::Border),
 		UI::MainWindow::d2dGameField) 
 {}
+
+void GridComponent::Draw() const {
+	m_gridRect.Draw();
+}
 
 GOBgComponent::GOBgComponent(const GraphicsDevice& device) 
 	: RectComponent(device.Context(),
@@ -36,7 +44,8 @@ GOBgComponent::GOBgComponent(const GraphicsDevice& device)
 		UI::GameOver::gameOverRect) 
 {}
 
-TitleBarComponent::TitleBarComponent(const GraphicsDevice& device) : m_graphicsDevice(device) {
+TitleBarComponent::TitleBarComponent(const GraphicsDevice& device) : 
+	Component(device), m_graphicsDevice(device) {
 	using UI::General::strokeWidth;
 	using UI::General::scaleFactor;
 	using UI::MainWindow::cornerRadius;
@@ -87,7 +96,7 @@ void TitleBarComponent::Draw() const {
 }
 
 PreviewComponent::PreviewComponent(const GameField& field, const GraphicsDevice& device) :
-	m_gameField(field), m_graphicsDevice(device), 
+	Component(device), m_gameField(field), m_graphicsDevice(device), 
 	m_outerRect(device.Context(),
 		device.GetBrush(GraphicsDevice::BrushType::UI),
 		device.GetBrush(GraphicsDevice::BrushType::Border),
@@ -125,13 +134,13 @@ void PreviewComponent::Draw() const {
 			d2dNextAreaIn.rect.left + offX + (pos.x + 1) * blockSize,
 			d2dNextAreaIn.rect.top + offY + (pos.y + 1) * blockSize
 		);
-
 		m_graphicsDevice.Context()->DrawBitmap(bitmap, dst);
 	}
 }
 
-ScoreComponent::ScoreComponent(const GraphicsDevice& device, const GameField& field) :
-	m_graphicsDevice(device), m_gameField(field), m_rectComponent(device.Context(),
+ScoreComponent::ScoreComponent(const GraphicsDevice& device, const GameField& field) : 
+	Component(device), m_graphicsDevice(device), m_gameField(field), 
+	m_rectComponent(device.Context(),
 		device.GetBrush(GraphicsDevice::BrushType::UI),
 		device.GetBrush(GraphicsDevice::BrushType::Border),
 		UI::MainWindow::d2dScoreRect) 
@@ -146,7 +155,8 @@ void ScoreComponent::Draw() const {
 }
 
 HighScoreComponent::HighScoreComponent(const GraphicsDevice& device, const GameField& field) :
-	m_graphicsDevice(device), m_gameField(field), m_rectComponent(device.Context(),
+	Component(device), m_graphicsDevice(device), m_gameField(field), 
+	m_rectComponent(device.Context(),
 		device.GetBrush(GraphicsDevice::BrushType::UI),
 		device.GetBrush(GraphicsDevice::BrushType::Border),
 		UI::MainWindow::d2dHighRect) 
@@ -158,10 +168,4 @@ void HighScoreComponent::Draw() const {
 	m_graphicsDevice.Context()->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
 		m_graphicsDevice.TextFormat(), UI::MainWindow::d2dHighRect.rect,
 		m_graphicsDevice.GetBrush(GraphicsDevice::BrushType::Text));
-}
-
-ButtonComponent::ButtonComponent(Button* button) : m_button(button) {}
-
-void ButtonComponent::Draw() const {
-	m_button->Draw();
 }

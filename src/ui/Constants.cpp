@@ -1,4 +1,4 @@
-#include "Constants.hpp"
+﻿#include "Constants.hpp"
 
 void UI::Init() {
 	using General::scaleFactor;

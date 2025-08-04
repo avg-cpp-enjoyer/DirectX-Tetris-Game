@@ -19,8 +19,8 @@ private:
 	const GraphicsDevice&    m_graphicsDevice;
 	HWND                     m_window;
 
-	std::unique_ptr<Button>  m_pauseButton;
-	std::unique_ptr<Button>  m_quitButton;
-	std::unique_ptr<Button>  m_minimizeButton;
-	std::unique_ptr<Button>  m_closeButton;
+	std::shared_ptr<ButtonComponent>  m_pauseButton;
+	std::shared_ptr<ButtonComponent>  m_quitButton;
+	std::shared_ptr<ButtonComponent>  m_minimizeButton;
+	std::shared_ptr<ButtonComponent>  m_closeButton;
 };

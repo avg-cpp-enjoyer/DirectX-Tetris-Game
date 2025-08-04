@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Constants.hpp"
+#include "ui/components/IComponent.hpp"
 
 #include <Windows.h>
 #include <d2d1_2.h>
@@ -12,21 +13,21 @@
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
-class Button {
+class ButtonComponent : public Component {
 public:
-	Button(
+	ButtonComponent(
 		HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius,
 		bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor,
 		const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor,
-		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, ID2D1RenderTarget* renderTarget
+		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const GraphicsDevice& device
 	);
 
-	virtual ~Button();
+	~ButtonComponent();
 
 	HWND GetHandle() const noexcept;
 	void SetText(const std::wstring& newText);
 	void SetOnClick(std::function<void()> handler);
-	virtual void Draw();
+	virtual void Draw() const override;
 private:
 	void OnMouseMove(HWND window);
 	void OnMouseLeave(HWND window);
@@ -57,7 +58,7 @@ protected:
 	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_textBrush;
 	Microsoft::WRL::ComPtr<IDWriteTextFormat>    m_textFormat;
 
-	ID2D1RenderTarget* m_renderTarget;
+	ID2D1DeviceContext1* m_context;
 
 	HWND m_button;
 	WNDPROC m_oldProc;

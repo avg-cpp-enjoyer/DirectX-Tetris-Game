@@ -2,18 +2,17 @@
 
 #include "Button.hpp"
 
-class TitleButton final : public Button {
+class TitleButtonComponent : public ButtonComponent {
 public:
-	TitleButton(
+	TitleButtonComponent(
 		HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius,
 		bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor,
 		const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor,
-		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, ID2D1RenderTarget* renderTarget
+		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const GraphicsDevice& device
 	);
 
-	~TitleButton() override;
-
-	void Draw() override;
+	~TitleButtonComponent() override;
+	void Draw() const override;
 private:
 	Microsoft::WRL::ComPtr<ID2D1Factory>      m_factory;
 	Microsoft::WRL::ComPtr<ID2D1PathGeometry> m_geometry;

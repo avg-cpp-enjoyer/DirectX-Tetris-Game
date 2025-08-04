@@ -13,7 +13,6 @@ class GameField {
 public:
 	GameField();
 	~GameField() = default;
-
 	bool MoveCurrent(Direction dir);
 	bool RotateCurrent();
 	void UpdateGhostPos();
@@ -44,4 +43,5 @@ private:
 	Tetramino m_ghostTetramino = TetraminoManager::CreateTetramino(m_currentTetramino.GetType());
 	int m_score = 0;
 	bool m_gameOver = false;
+	static constexpr int gfStride = 16;
 };

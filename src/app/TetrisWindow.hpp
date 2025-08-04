@@ -10,10 +10,12 @@
 
 #include <memory>
 
+#pragma comment(lib, "Winmm.lib")
+
 class TetrisWindow : public Base<TetrisWindow> {
 public:
-	TetrisWindow() = default;
-	~TetrisWindow() noexcept override {}
+	TetrisWindow();
+	~TetrisWindow() noexcept override;
 
 	const wchar_t* ClassName() const override;
 	intptr_t HandleMessage(uint32_t msg, uintptr_t wParam, intptr_t lParam) override;

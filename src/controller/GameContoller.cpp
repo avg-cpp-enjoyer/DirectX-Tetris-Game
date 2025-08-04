@@ -1,10 +1,10 @@
-#include "GameController.hpp"
+﻿#include "GameController.hpp"
 
 void GameController::Start() {
 	m_logicRunning.store(true, std::memory_order_relaxed);
 	m_logicThread = std::thread(&GameController::LogicLoop, this);
 
-	SetThreadPriority(m_logicThread.native_handle(), THREAD_PRIORITY_HIGHEST);
+	SetThreadPriority(m_logicThread.native_handle(), THREAD_PRIORITY_NORMAL);
 	SetThreadAffinityMask(m_logicThread.native_handle(), 1ULL << 3);
 }
 
@@ -48,7 +48,7 @@ void GameController::LogicLoop() {
 		}
 
 		if (m_gameField.IsGameOver()) {
-			m_onGameOver();
+			m_GameOverCallback();
 			m_isPaused.store(true);
 			m_nextTick = std::chrono::steady_clock::now() + tickInterval;
 			continue;
@@ -65,6 +65,8 @@ void GameController::LogicLoop() {
 }
 
 void GameController::ExecuteCommand(Command cmd) {
+	using UI::MainWindow::ghostId;
+
 	if (m_gameField.GetCurrentTetramino().IsDropping() && cmd != Command::CommitDrop) {
 		return;
 	}
@@ -88,17 +90,13 @@ void GameController::ExecuteCommand(Command cmd) {
 		m_gameField.HardDrop();
 		m_pendingLock.store(true, std::memory_order_relaxed);
 		break;
-	case Command::CommitDrop: {
-		m_gameField.LockTetramino();
-		m_nextTick = std::chrono::steady_clock::now() + std::chrono::duration<double>(0.5);
-		break;
-	}
 	case Command::Pause:
 		PauseGame();
 		break;
 	}
 
 	m_gameField.UpdateGhostPos();
+	m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
 }
 
 void GameController::PushCommand(Command cmd) {
@@ -120,31 +118,59 @@ bool GameController::PauseGame() {
 }
 
 void GameController::OnDrop() {
+	using namespace UI::MainWindow;
+
 	Tetramino& current = m_gameField.GetCurrentTetramino();
-	if (m_pendingLock.load(std::memory_order_relaxed) && !current.IsAnimating()) {
-		{
-			std::lock_guard<std::mutex> lock(m_cmdMutex);
-			m_commands.push(Command::CommitDrop);
-		}
-		m_cmdCV.notify_one();
-		m_pendingLock.store(false, std::memory_order_relaxed);
-	}
+    if (m_pendingLock.load(std::memory_order_relaxed) && !current.IsAnimating()) {
+        m_gameField.LockTetramino();
+        m_pendingLock.store(false, std::memory_order_relaxed);
+
+        m_GameSceneCallback().GetComponentById(blockGridId)->SetRedraw(true);
+        m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
+        m_UISceneCallback().GetComponentById(previewId)->SetRedraw(true);
+		m_UISceneCallback().GetComponentById(scoreId)->SetRedraw(true);
+
+		m_nextTick = std::chrono::steady_clock::now() + std::chrono::duration<double>(0.5);
+    }
+	m_cmdCV.notify_one();
 }
 
 GameField& GameController::GetGameField() {
 	return m_gameField;
 }
 
-void GameController::RegisterGameOverCallback(std::function<void()> callback) {
-	m_onGameOver = std::move(callback);
+std::atomic<bool>& GameController::GetPengingLock() {
+	return m_pendingLock;
+}
+
+void GameController::SetGameOverCallback(std::function<void()> callback) {
+	m_GameOverCallback = std::move(callback);
+}
+
+void GameController::SetUISceneCallback(std::function<Scene&()> callback) {
+	m_UISceneCallback = std::move(callback);
+}
+
+void GameController::SetGameSceneCallback(std::function<Scene&()> callback) {
+	m_GameSceneCallback = std::move(callback);
 }
 
 void GameController::GravityStep() {
+	using namespace UI::MainWindow;
+
 	if (m_gameField.GetCurrentTetramino().IsDropping()) {
 		return;
 	}
 
-	m_gameField.Update();
+	m_gameField.UpdateGhostPos();
+
+	if (!m_gameField.MoveCurrent(Direction::DIRECTION_DOWN)) {
+		m_gameField.LockTetramino();
+		m_GameSceneCallback().GetComponentById(blockGridId)->SetRedraw(true);
+		m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
+		m_UISceneCallback().GetComponentById(previewId)->SetRedraw(true);
+		m_UISceneCallback().GetComponentById(scoreId)->SetRedraw(true);
+	}
 }
 
 void GameController::StopExecution() {
@@ -153,6 +179,7 @@ void GameController::StopExecution() {
 }
 
 void GameController::Restart() {
+	using namespace UI::MainWindow;
 	{
 		std::lock_guard<std::mutex> lock(m_gameFieldMutex);
 		m_gameField.Reset();
@@ -160,4 +187,10 @@ void GameController::Restart() {
 	m_isPaused.store(false);
 	m_cmdCV.notify_all();
 	m_nextTick = std::chrono::steady_clock::now();
+
+	m_GameSceneCallback().GetComponentById(blockGridId)->SetRedraw(true);
+	m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
+	m_UISceneCallback().GetComponentById(previewId)->SetRedraw(true);
+	m_UISceneCallback().GetComponentById(scoreId)->SetRedraw(true);
+	m_UISceneCallback().GetComponentById(highScoreId)->SetRedraw(true);
 }

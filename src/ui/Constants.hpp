@@ -77,6 +77,20 @@ namespace UI {
 		inline D2D1_RECT_F quitRect;
 		inline D2D1_RECT_F closeRect;
 		inline D2D1_RECT_F minimizeRect;
+
+		inline constexpr int bgId           = 1;
+		inline constexpr int gridId         = 2;
+		inline constexpr int titleBarId     = 3;
+		inline constexpr int previewId      = 4;
+		inline constexpr int scoreId        = 5;
+		inline constexpr int highScoreId    = 6;
+		inline constexpr int quitBtnId      = 7;
+		inline constexpr int pauseBtnId     = 8;
+		inline constexpr int minimizeBtnId  = 9;
+		inline constexpr int closeBtnId     = 10;
+		inline constexpr int tetramioId     = 11;
+		inline constexpr int ghostId        = 12;
+		inline constexpr int blockGridId    = 13;
 	}
 
 	namespace GameOver {

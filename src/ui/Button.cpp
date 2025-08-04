@@ -1,20 +1,20 @@
 ﻿#include "Button.hpp"
 
-Button::Button(
+ButtonComponent::ButtonComponent(
 	HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius, 
 	bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor, 
 	const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor, 
-	Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, ID2D1RenderTarget* renderTarget
-) : m_text(text), m_bounds(bounds), m_cornerRadius(cornerRadius), m_borderless(borderless), 
+	Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const GraphicsDevice& device
+) : Component(device), m_text(text), m_bounds(bounds), m_cornerRadius(cornerRadius), m_borderless(borderless), 
 	m_defaultColor(defaultColor), m_clickedColor(clickedColor), m_hoveredColor(hoveredColor), 
 	m_borderColor(borderColor), m_textColor(textColor), m_textFormat(std::move(textFormat)), 
-	m_renderTarget(renderTarget) { 
+	m_context(device.Context()) { 
 
-	m_renderTarget->CreateSolidColorBrush(m_defaultColor, &m_defaultBrush);
-	m_renderTarget->CreateSolidColorBrush(m_clickedColor, &m_clickedBrush); 
-	m_renderTarget->CreateSolidColorBrush(m_hoveredColor, &m_hoveredBrush); 
-	m_renderTarget->CreateSolidColorBrush(m_borderColor, &m_borderBrush); 
-	m_renderTarget->CreateSolidColorBrush(m_textColor, &m_textBrush); 
+	m_context->CreateSolidColorBrush(m_defaultColor, &m_defaultBrush);
+	m_context->CreateSolidColorBrush(m_clickedColor, &m_clickedBrush); 
+	m_context->CreateSolidColorBrush(m_hoveredColor, &m_hoveredBrush); 
+	m_context->CreateSolidColorBrush(m_borderColor, &m_borderBrush); 
+	m_context->CreateSolidColorBrush(m_textColor, &m_textBrush); 
 
 	m_boundsPx.left    = static_cast<long>(ceil(bounds.left)); 
 	m_boundsPx.top     = static_cast<long>(ceil(bounds.top)); 
@@ -30,26 +30,26 @@ Button::Button(
 	m_oldProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(m_button, GWLP_WNDPROC, reinterpret_cast<intptr_t>(ButtonProc))); 
 } 
 
-Button::~Button() { 
+ButtonComponent::~ButtonComponent() { 
 	if (IsWindow(m_button)) { 
 		SetWindowLongPtrW(m_button, GWLP_WNDPROC, reinterpret_cast<intptr_t>(m_oldProc)); 
 	} 
 } 
 
-HWND Button::GetHandle() const noexcept { 
+HWND ButtonComponent::GetHandle() const noexcept { 
 	return m_button; 
 } 
 
-void Button::SetText(const std::wstring& newText) { 
+void ButtonComponent::SetText(const std::wstring& newText) { 
 	m_text = newText; 
 	InvalidateRect(GetParent(m_button), &m_boundsPx, false);
 } 
 
-void Button::SetOnClick(std::function<void()> handler) { 
+void ButtonComponent::SetOnClick(std::function<void()> handler) { 
 	m_onClick = std::move(handler); 
 } 
 
-void Button::Draw() {
+void ButtonComponent::Draw() const {
 	using UI::General::strokeWidth;
 	static const float offset = strokeWidth / 2.0f;
 
@@ -57,19 +57,19 @@ void Button::Draw() {
 	D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(rect, m_cornerRadius, m_cornerRadius);
 
 	ID2D1SolidColorBrush* fillBrush = GetCurrentBrush();
-	m_renderTarget->FillRoundedRectangle(roundedRect, fillBrush);
+	m_context->FillRoundedRectangle(roundedRect, fillBrush);
 
 	if (!m_borderless) {
-		m_renderTarget->SetTransform(D2D1::Matrix3x2F::Translation(offset, offset));
-		m_renderTarget->DrawRoundedRectangle(&roundedRect, m_borderBrush.Get(), strokeWidth);
-		m_renderTarget->SetTransform(D2D1::Matrix3x2F::Identity());
+		m_context->SetTransform(D2D1::Matrix3x2F::Translation(offset, offset));
+		m_context->DrawRoundedRectangle(&roundedRect, m_borderBrush.Get(), strokeWidth);
+		m_context->SetTransform(D2D1::Matrix3x2F::Identity());
 	}
 
-	m_renderTarget->DrawTextW(m_text.c_str(), static_cast<uint32_t>(m_text.length()), m_textFormat.Get(), m_bounds, m_textBrush.Get());
+	m_context->DrawTextW(m_text.c_str(), static_cast<uint32_t>(m_text.length()), m_textFormat.Get(), m_bounds, m_textBrush.Get());
 }
 
-intptr_t __stdcall Button::ButtonProc(HWND window, uint32_t msg, uintptr_t wParam, intptr_t lParam) { 
-	auto* self = reinterpret_cast<Button*>(GetWindowLongPtrW(window, GWLP_USERDATA)); 
+intptr_t __stdcall ButtonComponent::ButtonProc(HWND window, uint32_t msg, uintptr_t wParam, intptr_t lParam) { 
+	auto* self = reinterpret_cast<ButtonComponent*>(GetWindowLongPtrW(window, GWLP_USERDATA)); 
 	if (!self) return DefWindowProcW(window, msg, wParam, lParam); 
 	
 	switch (msg) { 
@@ -92,7 +92,7 @@ intptr_t __stdcall Button::ButtonProc(HWND window, uint32_t msg, uintptr_t wPara
 	} 
 } 
 
-ID2D1SolidColorBrush* Button::GetCurrentBrush() const {
+ID2D1SolidColorBrush* ButtonComponent::GetCurrentBrush() const {
 	if (m_clicked) {
 		return m_clickedBrush.Get();
 	}
@@ -104,7 +104,7 @@ ID2D1SolidColorBrush* Button::GetCurrentBrush() const {
 	return m_defaultBrush.Get();
 }
 
-void Button::OnMouseMove(HWND window) {
+void ButtonComponent::OnMouseMove(HWND window) {
 	if (!m_hovered) { 
 		TRACKMOUSEEVENT tme = { sizeof(tme) };
 		tme.dwFlags = TME_LEAVE; 
@@ -112,23 +112,27 @@ void Button::OnMouseMove(HWND window) {
 		TrackMouseEvent(&tme); 
 		m_hovered = true; 
 		InvalidateRect(GetParent(window), &m_boundsPx, false); 
+		m_needsRedraw = true;
 	} 
 } 
 
-void Button::OnMouseLeave(HWND window) { 
+void ButtonComponent::OnMouseLeave(HWND window) { 
 	m_hovered = false; 
-	InvalidateRect(GetParent(window), &m_boundsPx, false); 
+	InvalidateRect(GetParent(window), &m_boundsPx, false);
+	m_needsRedraw = true;
 } 
 
-void Button::OnLButtonDown(HWND window) { 
+void ButtonComponent::OnLButtonDown(HWND window) { 
 	m_clicked = true; 
 	InvalidateRect(GetParent(window), &m_boundsPx, false);
 	SetFocus(GetParent(window));
+	m_needsRedraw = true;
 } 
 
-void Button::OnLButtonUp(HWND window) { 
+void ButtonComponent::OnLButtonUp(HWND window) { 
 	m_clicked = false; 
 	if (m_onClick) m_onClick(); 
 	InvalidateRect(GetParent(window), &m_boundsPx, false);
 	SetFocus(GetParent(window));
+	m_needsRedraw = true;
 }

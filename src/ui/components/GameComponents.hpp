@@ -2,27 +2,27 @@
 #include "model/GameField.hpp"
 #include "engine/ResourceManager.hpp"
 
-class TetraminoComponent : public IComponent {
+class TetraminoComponent : public Component {
 public:
-	TetraminoComponent(ID2D1DeviceContext1* context, const GameField& field);
+	TetraminoComponent(const GraphicsDevice& device, const GameField& field);
+	void Draw() const;
+private:
+	ID2D1DeviceContext1* m_context;
+	const GameField& m_gameField;
+};
+
+class GhostComponent : public Component {
+public:
+	GhostComponent(const GraphicsDevice& device, const GameField& field);
 	void Draw() const override;
 private:
 	ID2D1DeviceContext1* m_context;
 	const GameField& m_gameField;
 };
 
-class GhostComponent : public IComponent {
+class BlockGridComponent : public Component {
 public:
-	GhostComponent(ID2D1DeviceContext1* context, const GameField& field);
-	void Draw() const override;
-private:
-	ID2D1DeviceContext1* m_context;
-	const GameField& m_gameField;
-};
-
-class BlockGridComponent : public IComponent {
-public:
-	BlockGridComponent(ID2D1DeviceContext1* context, const GameField& field);
+	BlockGridComponent(const GraphicsDevice& device, const GameField& field);
 	void Draw() const override;
 private:
 	ID2D1DeviceContext1* m_context;

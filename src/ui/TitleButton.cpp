@@ -1,14 +1,14 @@
 #include "TitleButton.hpp"
 
-TitleButton::TitleButton(
+TitleButtonComponent::TitleButtonComponent(
 	HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius,
 	bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor,
 	const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor,
-	Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, ID2D1RenderTarget* renderTarget
-) : Button(parent, text, bounds, cornerRadius, borderless, textColor, borderColor, defaultColor,
-	clickedColor, hoveredColor, textFormat, renderTarget) {
+	Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const GraphicsDevice& device
+) : ButtonComponent(parent, text, bounds, cornerRadius, borderless, textColor, borderColor, defaultColor,
+	clickedColor, hoveredColor, textFormat, device) {
 
-	m_renderTarget->GetFactory(&m_factory);
+	m_context->GetFactory(&m_factory);
 	m_factory->CreatePathGeometry(&m_geometry);
 	m_geometry->Open(&m_sink);
 
@@ -25,15 +25,16 @@ TitleButton::TitleButton(
 	m_sink->Close();
 }
 
-TitleButton::~TitleButton() {
+TitleButtonComponent::~TitleButtonComponent() {
 	if (IsWindow(m_button)) {
 		SetWindowLongPtrW(m_button, GWLP_WNDPROC, reinterpret_cast<intptr_t>(m_oldProc));
 	}
 }
 
-void TitleButton::Draw() {
+void TitleButtonComponent::Draw() const {
 	ID2D1SolidColorBrush* currentBrush = GetCurrentBrush();
 
-	m_renderTarget->FillGeometry(m_geometry.Get(), currentBrush);
-	m_renderTarget->DrawTextW(m_text.c_str(), static_cast<uint32_t>(m_text.length()), m_textFormat.Get(), m_bounds, m_textBrush.Get());
+	m_context->FillGeometry(m_geometry.Get(), currentBrush);
+	m_context->DrawTextW(m_text.c_str(), static_cast<uint32_t>(m_text.length()), m_textFormat.Get(), m_bounds, m_textBrush.Get());
+	m_needsRedraw = false;
 }

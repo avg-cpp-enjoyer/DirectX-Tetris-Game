@@ -1,7 +1,7 @@
 #include "GameComponents.hpp"
 
-TetraminoComponent::TetraminoComponent(ID2D1DeviceContext1* context, const GameField& field) 
-	: m_context(context), m_gameField(field)
+TetraminoComponent::TetraminoComponent(const GraphicsDevice& device, const GameField& field)
+	:  Component(device), m_context(device.Context()), m_gameField(field)
 {}
 
 void TetraminoComponent::Draw() const {
@@ -18,8 +18,8 @@ void TetraminoComponent::Draw() const {
 	}
 }
 
-GhostComponent::GhostComponent(ID2D1DeviceContext1* context, const GameField& field)
-	: m_context(context), m_gameField(field)
+GhostComponent::GhostComponent(const GraphicsDevice& device, const GameField& field)
+	: Component(device), m_context(device.Context()), m_gameField(field)
 {}
 
 void GhostComponent::Draw() const {
@@ -39,8 +39,8 @@ void GhostComponent::Draw() const {
 	}
 }
 
-BlockGridComponent::BlockGridComponent(ID2D1DeviceContext1* context, const GameField& field) 
-	: m_context(context), m_gameField(field) 
+BlockGridComponent::BlockGridComponent(const GraphicsDevice& device, const GameField& field)
+	: Component(device), m_context(device.Context()), m_gameField(field)
 {}
 
 void BlockGridComponent::Draw() const {
