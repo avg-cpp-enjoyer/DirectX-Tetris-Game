@@ -46,7 +46,7 @@ BlockGridComponent::BlockGridComponent(const GraphicsDevice& device, const GameF
 void BlockGridComponent::Draw() const {
 	for (int y = 0; y < gfHeight; y++) {
 		for (int x = 0; x < gfWidth; x++) {
-			TetraminoType type = m_gameField.GetGrid()[x][y];
+			TetraminoType type = m_gameField.GetCell(x, y);
 			if (type != TetraminoType::TETRAMINO_NONE) {
 				ID2D1Bitmap* bitmap = ResourceManager::GetTetraminoBitmap(type);
 				D2D1_RECT_F dst = D2D1::RectF(
