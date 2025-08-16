@@ -2,12 +2,12 @@
 
 #include "engine/GraphicsDevice.hpp"
 
-#include <d2d1_2.h>
+#include <d2d1_1.h>
 #include <wrl/client.h>
 
 class __declspec(novtable) Component {
 public:
-	explicit Component(const GraphicsDevice& device);
+	explicit Component(ID2D1DeviceContext1* context);
 	virtual ~Component() = default;
 	virtual void Draw() const = 0;
 	ID2D1CommandList* GetCommandList() const;

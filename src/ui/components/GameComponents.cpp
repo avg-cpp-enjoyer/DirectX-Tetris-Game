@@ -1,7 +1,7 @@
-#include "GameComponents.hpp"
+﻿#include "GameComponents.hpp"
 
-TetraminoComponent::TetraminoComponent(const GraphicsDevice& device, const GameField& field)
-	:  Component(device), m_context(device.Context()), m_gameField(field)
+TetraminoComponent::TetraminoComponent(const RenderTarget& target, const GameField& field)
+	: Component(target.Context()), m_gameField(field)
 {}
 
 void TetraminoComponent::Draw() const {
@@ -9,17 +9,15 @@ void TetraminoComponent::Draw() const {
 	ID2D1Bitmap* bitmap = ResourceManager::GetTetraminoBitmap(current.GetType());
 	for (const auto& block : current.GetTetramino()) {
 		vec2 pos = current.GetVisualPos() + block;
-
 		float fx = std::round(offsetX + pos.x * blockSize);
 		float fy = std::round(offsetY + pos.y * blockSize);
-
 		D2D1_RECT_F dst = D2D1::RectF(fx, fy, fx + blockSize, fy + blockSize);
 		m_context->DrawBitmap(bitmap, dst);
 	}
 }
 
-GhostComponent::GhostComponent(const GraphicsDevice& device, const GameField& field)
-	: Component(device), m_context(device.Context()), m_gameField(field)
+GhostComponent::GhostComponent(const RenderTarget& target, const GameField& field)
+	: Component(target.Context()), m_gameField(field)
 {}
 
 void GhostComponent::Draw() const {
@@ -28,19 +26,16 @@ void GhostComponent::Draw() const {
 		ID2D1Bitmap* bitmap = ResourceManager::GetTetraminoBitmap(TetraminoType::TETRAMINO_GHOST);
 		for (const auto& block : ghost.GetTetramino()) {
 			vec2 pos = ghost.GetPos() + block;
-			D2D1_RECT_F dst = D2D1::RectF(
-				offsetX + pos.x * blockSize,
-				offsetY + pos.y * blockSize,
-				offsetX + (pos.x + 1) * blockSize,
-				offsetY + (pos.y + 1) * blockSize
-			);
+			float fx = std::round(offsetX + pos.x * blockSize);
+			float fy = std::round(offsetY + pos.y * blockSize);
+			D2D1_RECT_F dst = D2D1::RectF(fx, fy, fx + blockSize, fy + blockSize);
 			m_context->DrawBitmap(bitmap, dst);
 		}
 	}
 }
 
-BlockGridComponent::BlockGridComponent(const GraphicsDevice& device, const GameField& field)
-	: Component(device), m_context(device.Context()), m_gameField(field)
+BlockGridComponent::BlockGridComponent(const RenderTarget& target, const GameField& field)
+	: Component(target.Context()), m_gameField(field)
 {}
 
 void BlockGridComponent::Draw() const {
@@ -49,12 +44,9 @@ void BlockGridComponent::Draw() const {
 			TetraminoType type = m_gameField.GetCell(x, y);
 			if (type != TetraminoType::TETRAMINO_NONE) {
 				ID2D1Bitmap* bitmap = ResourceManager::GetTetraminoBitmap(type);
-				D2D1_RECT_F dst = D2D1::RectF(
-					offsetX + x * blockSize,
-					offsetY + y * blockSize,
-					offsetX + (x + 1) * blockSize,
-					offsetY + (y + 1) * blockSize
-				);
+				float fx = std::round(offsetX + x * blockSize);
+				float fy = std::round(offsetY + y * blockSize);
+				D2D1_RECT_F dst = D2D1::RectF(fx, fy, fx + blockSize, fy + blockSize);
 				m_context->DrawBitmap(bitmap, dst);
 			}
 		}

@@ -5,7 +5,7 @@ void GameController::Start() {
 	m_logicThread = std::thread(&GameController::LogicLoop, this);
 
 	SetThreadPriority(m_logicThread.native_handle(), THREAD_PRIORITY_NORMAL);
-	SetThreadAffinityMask(m_logicThread.native_handle(), 1ULL << 3);
+	SetThreadAffinityMask(m_logicThread.native_handle(), 1ULL << 4);
 }
 
 void GameController::Shutdown() {
@@ -96,7 +96,7 @@ void GameController::ExecuteCommand(Command cmd) {
 	}
 
 	m_gameField.UpdateGhostPos();
-	m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
+	m_GameSceneCallback().GetById<GhostComponent>(ghostId)->SetRedraw(true);
 }
 
 void GameController::PushCommand(Command cmd) {
@@ -125,10 +125,10 @@ void GameController::OnDrop() {
         m_gameField.LockTetramino();
         m_pendingLock.store(false, std::memory_order_relaxed);
 
-        m_GameSceneCallback().GetComponentById(blockGridId)->SetRedraw(true);
-        m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
-        m_UISceneCallback().GetComponentById(previewId)->SetRedraw(true);
-		m_UISceneCallback().GetComponentById(scoreId)->SetRedraw(true);
+        m_GameSceneCallback().GetById<BlockGridComponent>(blockGridId)->SetRedraw(true);
+        m_GameSceneCallback().GetById<GhostComponent>(ghostId)->SetRedraw(true);
+        m_UISceneCallback().GetById<PreviewComponent>(previewId)->SetRedraw(true);
+		m_UISceneCallback().GetById<ScoreComponent>(scoreId)->SetRedraw(true);
 
 		m_nextTick = std::chrono::steady_clock::now() + std::chrono::duration<double>(0.5);
     }
@@ -163,13 +163,14 @@ void GameController::GravityStep() {
 	}
 
 	m_gameField.UpdateGhostPos();
+	m_GameSceneCallback().GetById<GhostComponent>(ghostId)->SetRedraw(true);
 
 	if (!m_gameField.MoveCurrent(Direction::DIRECTION_DOWN)) {
 		m_gameField.LockTetramino();
-		m_GameSceneCallback().GetComponentById(blockGridId)->SetRedraw(true);
-		m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
-		m_UISceneCallback().GetComponentById(previewId)->SetRedraw(true);
-		m_UISceneCallback().GetComponentById(scoreId)->SetRedraw(true);
+		m_GameSceneCallback().GetById<BlockGridComponent>(blockGridId)->SetRedraw(true);
+		m_GameSceneCallback().GetById<GhostComponent>(ghostId)->SetRedraw(true);
+		m_UISceneCallback().GetById<PreviewComponent>(previewId)->SetRedraw(true);
+		m_UISceneCallback().GetById<ScoreComponent>(scoreId)->SetRedraw(true);
 	}
 }
 
@@ -188,9 +189,9 @@ void GameController::Restart() {
 	m_cmdCV.notify_all();
 	m_nextTick = std::chrono::steady_clock::now();
 
-	m_GameSceneCallback().GetComponentById(blockGridId)->SetRedraw(true);
-	m_GameSceneCallback().GetComponentById(ghostId)->SetRedraw(true);
-	m_UISceneCallback().GetComponentById(previewId)->SetRedraw(true);
-	m_UISceneCallback().GetComponentById(scoreId)->SetRedraw(true);
-	m_UISceneCallback().GetComponentById(highScoreId)->SetRedraw(true);
+	m_GameSceneCallback().GetById<BlockGridComponent>(blockGridId)->SetRedraw(true);
+	m_GameSceneCallback().GetById<GhostComponent>(ghostId)->SetRedraw(true);
+	m_UISceneCallback().GetById<PreviewComponent>(previewId)->SetRedraw(true);
+	m_UISceneCallback().GetById<ScoreComponent>(scoreId)->SetRedraw(true);
+	m_UISceneCallback().GetById<HighScoreComponent>(highScoreId)->SetRedraw(true);
 }

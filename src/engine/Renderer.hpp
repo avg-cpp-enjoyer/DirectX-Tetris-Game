@@ -7,6 +7,8 @@
 #include "ui/components/UIComponents.hpp"
 #include "ui/components/GameComponents.hpp"
 #include "core/Log.hpp"
+#include "RenderTarget.hpp"
+#include "IBuilder.hpp"
 
 #include <d3d12.h>
 #include <d2d1.h>
@@ -16,35 +18,33 @@
 #include <mutex>
 #include <functional>
 
-class Renderer {
+class __declspec(novtable) Renderer {
 public:
-	Renderer(ID2D1DeviceContext1* context, IDXGISwapChain* swapChain, IDCompositionDevice* dCompDevice);
-	void Start();
+	explicit Renderer(HWND window);
+	virtual ~Renderer() = default;
+
+	Renderer(const Renderer&) = delete; 
+	Renderer(Renderer&&) = delete;
+
+	Renderer& operator=(const Renderer&) = delete; 
+	Renderer& operator=(Renderer&&) = delete;
+
+	void Start(int threadPriority, uintptr_t affinityMask);
 	void Shutdown();
-	Scene& GetGameScene();
-	Scene& GetUIScene();
-	ActiveGameScene& GetActiveGameScene();
-	void RenderLoop();
-	void SetDropCallback(std::function<void()> callback);
-	void AttachGameField(GameField& gameField, std::mutex& gfMutex);
-	void UpdateAnimations(float deltaTime, GameField& gameField);
-private:
-	void RenderFrame() const;
-private:
-	Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_primaryBitmap;
-
-	ID2D1DeviceContext1*  m_context;
-	IDXGISwapChain*       m_swapChain;
-	IDCompositionDevice*  m_dCompDevice;
-	ID2D1Image*           m_primaryTarget;
-	GameField*            m_gameField = nullptr;
-	std::mutex*           m_gfMutex = nullptr;
-	std::function<void()> m_onDropComplete = nullptr;
-	std::thread           m_thread;
-	std::atomic<bool>     m_running{ false };
-	bool                  m_dropDone = false;
-
-	Scene                 m_gameScene;
-	Scene                 m_uiScene;
-	ActiveGameScene       m_activeScene;
+	RenderTarget& GetTarget();
+protected:
+	template <typename T, typename... Args, typename = std::enable_if_t<std::is_base_of_v<IBuilder, T>>>
+	void InitBuilder(Args&&... args);
+	virtual void RenderLoop() = 0;
+	virtual void RenderFrame() = 0;
+protected:
+	std::thread               m_renderThread;
+	std::atomic<bool>         m_running{ false };
+	RenderTarget              m_renderTarget;
+	std::unique_ptr<IBuilder> m_builder = nullptr;
 };
+
+template<typename T, typename... Args, typename>
+inline void Renderer::InitBuilder(Args&&... args) {
+	m_builder = std::make_unique<T>(std::forward<Args>(args)...);
+}

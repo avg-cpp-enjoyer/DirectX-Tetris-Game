@@ -3,6 +3,8 @@
 #include "core/RingBuffer.hpp"
 #include "model/GameField.hpp"
 #include "engine/Scene.hpp"
+#include "ui/components/GameComponents.hpp"
+#include "ui/components/UIComponents.hpp"
 
 #include <chrono>
 #include <thread>
@@ -41,6 +43,7 @@ private:
 	std::atomic<bool>          m_pendingLock{ false };
 	std::thread                m_logicThread;
 	std::function<void()>      m_GameOverCallback;
+
 	std::function<Scene&()>    m_UISceneCallback;
 	std::function<Scene&()>    m_GameSceneCallback;
 	std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> m_nextTick;

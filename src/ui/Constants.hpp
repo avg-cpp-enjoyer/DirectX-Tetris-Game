@@ -27,7 +27,6 @@ namespace UI {
 		inline const D2D1::ColorF btnClrHovered(50.0f / 255, 50.0f / 255, 50.0f / 255, 1.0f);
 		inline const D2D1::ColorF btnClrClicked(40.0f / 255, 40.0f / 255, 40.0f / 255, 1.0f);
 		inline const D2D1::ColorF textColor(128.0f / 255, 128.0f / 255, 128.0f / 255, 1.0f);
-		inline const D2D1::ColorF tetraminoColor(242.0f / 255, 149.0f / 255, 107.0f / 255, 1.0f);
 	}
 
 	namespace MainWindow {
@@ -109,5 +108,9 @@ namespace UI {
 		inline D2D1_RECT_F quitRect;
 		inline D2D1_ROUNDED_RECT gameOverRect;
 		inline D2D1_RECT_F textRect;
+
+		inline constexpr int sideBgId      = 14;
+		inline constexpr int restartBtnId  = 15;
+		inline constexpr int exitBtnId     = 16;
 	}
 }

@@ -4,6 +4,12 @@ TetrisWindow::TetrisWindow() {
 	timeBeginPeriod(1);
 	HR_LOG(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
 	UI::Init();
+
+	if (!Create(nullptr, WS_POPUP | WS_VISIBLE, WS_EX_APPWINDOW | WS_EX_NOREDIRECTIONBITMAP, CW_USEDEFAULT, CW_USEDEFAULT,
+		UI::MainWindow::mwWidth, UI::MainWindow::mwHeight)) {
+		MessageBox(m_window, L"Error: Unable to create window", L"Fatal error", MB_OK);
+		std::terminate();
+	}
 }
 
 TetrisWindow::~TetrisWindow() noexcept {
@@ -81,14 +87,14 @@ bool TetrisWindow::CreateGameOverWindow() {
 	const int x = rcMain.left + (rcMain.right - rcMain.left - static_cast<int>(goWidth)) / 2;
 	const int y = rcMain.top + (rcMain.bottom - rcMain.top - static_cast<int>(goHeight)) / 2;
 
-	GameOverWindow gameOver(m_gameController.GetGameField().GetScore(), GameField::GetHighScore());
-	gameOver.Create(L"Game Over", WS_POPUP | WS_VISIBLE, 0,
-		x, y, static_cast<int>(goWidth), static_cast<int>(goHeight));
+	GameOverWindow gameOver(m_gameController.GetGameField().GetScore());
+	gameOver.Create(L"Game Over", WS_POPUP | WS_VISIBLE, 0, x, y, static_cast<int>(goWidth), static_cast<int>(goHeight));
 
 	EnableWindow(m_window, false);
 
 	ShowWindow(gameOver.Window(), SW_SHOW);
 	UpdateWindow(gameOver.Window());
+
 
 	MSG msg;
 	while (IsWindowVisible(gameOver.Window()) && GetMessage(&msg, nullptr, 0, 0)) {
@@ -103,28 +109,32 @@ bool TetrisWindow::CreateGameOverWindow() {
 }
 
 void TetrisWindow::OnCreate() {
-	m_graphicsDevice.Initialize(m_window);
+	GraphicsDevice::Initialize();
+	m_renderer = std::make_unique<MainRenderer>(m_window, m_gameController.GetGameField(), m_gameController.GetGfMutex());
+	ResourceManager::Initialize(m_renderer->GetTarget().Context(), GraphicsDevice::WICFactory());
+
 	m_gameController.SetGameOverCallback([this]() { PostMessageW(m_window, WM_APP_GAMEOVER, 0, 0); });
 	m_gameController.SetUISceneCallback([this]() -> Scene& { return m_renderer->GetUIScene(); });
 	m_gameController.SetGameSceneCallback([this]() -> Scene& { return m_renderer->GetGameScene(); });
 
-	m_renderer = std::make_unique<Renderer>(m_graphicsDevice.Context(), m_graphicsDevice.SwapChain(), m_graphicsDevice.DCompDevice());
 	m_renderer->SetDropCallback(std::bind(&GameController::OnDrop, &m_gameController));
-	m_renderer->AttachGameField(m_gameController.GetGameField(), m_gameController.GetGfMutex());
-	
-	m_builder = std::make_unique<SceneBuilder>(*m_renderer, m_gameController, m_graphicsDevice, m_window);
-	m_builder->BuildGameScene();
-	m_builder->BuildUIScene();
+	m_renderer->Start(THREAD_PRIORITY_HIGHEST, 1ULL << 2);
 
-	ResourceManager::Initialize(m_graphicsDevice.Context(), m_graphicsDevice.WICFactory());
+	auto* pauseBtn = m_renderer->GetUIScene().GetById<ButtonComponent>(UI::MainWindow::pauseBtnId);
+	pauseBtn->SetOnClick([this, pauseBtn]() { OnPause(pauseBtn); });
+	m_renderer->GetUIScene().GetById<ButtonComponent>(UI::MainWindow::quitBtnId)->SetOnClick(
+		[this]() { PostMessage(m_window, WM_DESTROY, 0, 0); });
+	m_renderer->GetUIScene().GetById<ButtonComponent>(UI::MainWindow::closeBtnId)->SetOnClick(
+		[this]() { PostMessage(m_window, WM_CLOSE, 0, 0); });
+	m_renderer->GetUIScene().GetById<ButtonComponent>(UI::MainWindow::minimizeBtnId)->SetOnClick(
+		[this]() { ShowWindow(m_window, SW_MINIMIZE); });
+
 	m_gameController.Start();
-	m_renderer->Start();
 }
 
 void TetrisWindow::OnDestroy() {
 	m_renderer->Shutdown();
 	m_gameController.Shutdown();
-
 	ResourceManager::Shutdown();
 	PostQuitMessage(0);
 }
@@ -137,4 +147,13 @@ void TetrisWindow::OnGameOver() {
 	}
 
 	m_gameController.Restart();
+}
+
+void TetrisWindow::OnPause(ButtonComponent* button) {
+	if (m_gameController.PauseGame()) {
+		button->SetText(L"Continue");
+	} else {
+		button->SetText(L"Pause");
+	}
+	m_gameController.ClearCommands();
 }

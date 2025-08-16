@@ -1,5 +1,4 @@
 ﻿#include "ResourceManager.hpp"
-#include "Renderer.hpp"
 
 void ResourceManager::Initialize(ID2D1DeviceContext* context, IWICImagingFactory* wic) {
 	GetInstance().InitializeImpl(context, wic);

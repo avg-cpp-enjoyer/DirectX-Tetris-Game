@@ -8,7 +8,7 @@ public:
 		HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius,
 		bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor,
 		const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor,
-		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const GraphicsDevice& device
+		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const RenderTarget& target
 	);
 
 	~TitleButtonComponent() override;

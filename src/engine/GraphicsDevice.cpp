@@ -1,49 +1,60 @@
 #include "GraphicsDevice.hpp"
 
-void GraphicsDevice::Initialize(HWND window) {
-	InitD3D(window);
-	InitD2D();
-	InitDComp(window);
-	InitText();
-	InitBrushes();
+void GraphicsDevice::Initialize() {
+	GetInstance().InitD3D();
+	GetInstance().InitD2D();
+	GetInstance().InitDComp();
+	GetInstance().InitText();
 }
 
-ID2D1DeviceContext1* GraphicsDevice::Context() const {
-	return m_d2dContext.Get();
+void GraphicsDevice::Reinit() {
+	GetInstance().m_d2dDevice.Reset();
+	GetInstance().m_d2dFactory.Reset();
+	GetInstance().m_d3dContext.Reset();
+	GetInstance().m_d3dDevice.Reset();
+	GetInstance().m_dcompDevice.Reset();
+	GetInstance().m_dxgiDevice.Reset();
+	GetInstance().m_dxgiFactory2.Reset();
+	GetInstance().m_textFormat.Reset();
+	GetInstance().m_wicFactory.Reset();
+	GetInstance().m_writeFactory.Reset();
+	Initialize();
 }
 
-IDXGISwapChain1* GraphicsDevice::SwapChain() const {
-	return m_swapChain.Get();
+IDCompositionDevice* GraphicsDevice::DCompDevice() {
+	return GetInstance().m_dcompDevice.Get();
 }
 
-IDCompositionDevice* GraphicsDevice::DCompDevice() const {
-	return m_dcompDevice.Get();
+IDXGIFactory2* GraphicsDevice::DXGIFactory() {
+	return GetInstance().m_dxgiFactory2.Get();
 }
 
-ID2D1Factory1* GraphicsDevice::Factory() const {
-	return m_d2dFactory.Get();
+IWICImagingFactory* GraphicsDevice::WICFactory() {
+	return GetInstance().m_wicFactory.Get();
 }
 
-IWICImagingFactory* GraphicsDevice::WICFactory() const {
-	return m_wicFactory.Get();
+ID3D11Device* GraphicsDevice::D3DDevice() {
+	return GetInstance().m_d3dDevice.Get();
 }
 
-IDWriteTextFormat* GraphicsDevice::TextFormat() const {
-	return m_textFormat.Get();
+ID2D1Device* GraphicsDevice::D2DDevice() {
+	return GetInstance().m_d2dDevice.Get();
 }
 
-ID2D1SolidColorBrush* GraphicsDevice::GetBrush(BrushType type) const {
-	switch (type) {
-	case BrushType::Background: return m_bgBrush.Get();
-	case BrushType::UI:         return m_uiBrush.Get();
-	case BrushType::Border:     return m_borderBrush.Get();
-	case BrushType::Text:       return m_textBrush.Get();
-	case BrushType::Grid:       return m_gridBrush.Get();
-	}
-	return m_bgBrush.Get();
+IDWriteTextFormat* GraphicsDevice::TextFormat() {
+	return GetInstance().m_textFormat.Get();
 }
 
-void GraphicsDevice::InitD3D(HWND window) {
+ID2D1Factory1* GraphicsDevice::Factory() {
+	return GetInstance().m_d2dFactory.Get();
+}
+
+GraphicsDevice& GraphicsDevice::GetInstance() {
+	static GraphicsDevice instance;
+	return instance;
+}
+
+void GraphicsDevice::InitD3D() {
 	uint32_t flags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef _DEBUG
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -53,29 +64,25 @@ void GraphicsDevice::InitD3D(HWND window) {
 
 	HR_LOG(m_d3dDevice.As(&m_dxgiDevice));
 
+	Microsoft::WRL::ComPtr<ID3D11Multithread> multithread;
+	if (SUCCEEDED(m_d3dDevice.As(&multithread))) {
+		multithread->SetMultithreadProtected(true);
+	}
+
 	Microsoft::WRL::ComPtr<IDXGIAdapter> adapter;
+	Microsoft::WRL::ComPtr<IDXGIFactory> factory;
 	HR_LOG(m_dxgiDevice->GetAdapter(&adapter));
-	Microsoft::WRL::ComPtr<IDXGIFactory2> factory2;
-	HR_LOG(adapter->GetParent(IID_PPV_ARGS(&factory2)));
+	HR_LOG(adapter->GetParent(IID_PPV_ARGS(&factory)));
+	HR_LOG(factory.As(&m_dxgiFactory2));
 
-	RECT rc; 
-	GetClientRect(window, &rc);
-
-	DXGI_SWAP_CHAIN_DESC1 scDesc = {};
-	scDesc.Width        = rc.right;
-	scDesc.Height       = rc.bottom;
-	scDesc.Format       = DXGI_FORMAT_B8G8R8A8_UNORM;
-	scDesc.SampleDesc   = { 1, 0 };
-	scDesc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	scDesc.BufferCount  = 3;
-	scDesc.SwapEffect   = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-	scDesc.AlphaMode    = DXGI_ALPHA_MODE_PREMULTIPLIED;
-	scDesc.Scaling      = DXGI_SCALING_STRETCH;
-
-	HR_LOG(factory2->CreateSwapChainForComposition(m_d3dDevice.Get(), &scDesc, nullptr, &m_swapChain));
+	Microsoft::WRL::ComPtr<IDXGIDevice1> dxgiDevice1;
+	if (SUCCEEDED(m_dxgiDevice.As(&dxgiDevice1))) {
+		HR_LOG(dxgiDevice1->SetMaximumFrameLatency(1));
+	}
 }
 
 void GraphicsDevice::InitD2D() {
+	assert(m_dxgiDevice && "InitD3D() must be called before InitD2D()");
 	D2D1_FACTORY_OPTIONS opts = {};
 #ifdef _DEBUG
 	opts.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
@@ -84,36 +91,6 @@ void GraphicsDevice::InitD2D() {
 		reinterpret_cast<void**>(m_d2dFactory.GetAddressOf())));
 
 	HR_LOG(m_d2dFactory->CreateDevice(m_dxgiDevice.Get(), &m_d2dDevice));
-
-	Microsoft::WRL::ComPtr<ID2D1DeviceContext> baseContext;
-	HR_LOG(m_d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, &baseContext));
-	HR_LOG(baseContext.As(&m_d2dContext));
-
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> back;
-	HR_LOG(m_swapChain->GetBuffer(0, IID_PPV_ARGS(&back)));
-	Microsoft::WRL::ComPtr<IDXGISurface> surface;
-	HR_LOG(back.As(&surface));
-
-	D2D1_BITMAP_PROPERTIES1 bitmapProps = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-		D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED));
-
-	HR_LOG(m_d2dContext->CreateBitmapFromDxgiSurface(surface.Get(), bitmapProps, &m_d2dTarget));
-	m_d2dContext->SetTarget(m_d2dTarget.Get());
-}
-
-void GraphicsDevice::InitDComp(HWND window) {
-	HR_LOG(DCompositionCreateDevice(m_dxgiDevice.Get(), IID_PPV_ARGS(&m_dcompDevice)));
-	HR_LOG(m_dcompDevice->CreateTargetForHwnd(window, true, &m_dcompTarget));
-	HR_LOG(m_dcompDevice->CreateVisual(&m_dcompVisual));
-	HR_LOG(m_dcompVisual->SetContent(m_swapChain.Get()));
-	HR_LOG(m_dcompTarget->SetRoot(m_dcompVisual.Get()));
-
-	Microsoft::WRL::ComPtr<IDCompositionVisual2> visual2;
-	if (SUCCEEDED(m_dcompVisual.As(&visual2))) {
-		visual2->SetBitmapInterpolationMode(DCOMPOSITION_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);
-	}
-
-	HR_LOG(m_dcompDevice->Commit());
 }
 
 void GraphicsDevice::InitText() {
@@ -129,13 +106,6 @@ void GraphicsDevice::InitText() {
 	m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 }
 
-void GraphicsDevice::InitBrushes() {
-	using namespace UI::General;
-
-	HR_LOG(m_d2dContext->CreateSolidColorBrush(bgColor, &m_bgBrush));
-	HR_LOG(m_d2dContext->CreateSolidColorBrush(uiColor, &m_uiBrush));
-	HR_LOG(m_d2dContext->CreateSolidColorBrush(borderColor, &m_borderBrush));
-	HR_LOG(m_d2dContext->CreateSolidColorBrush(textColor, &m_textBrush));
-	HR_LOG(m_d2dContext->CreateSolidColorBrush(borderColor, &m_gridBrush));
-	HR_LOG(m_d2dContext->CreateSolidColorBrush(tetraminoColor, &m_tetraminoBrush));
+void GraphicsDevice::InitDComp() {
+	HR_LOG(DCompositionCreateDevice(m_dxgiDevice.Get(), IID_PPV_ARGS(&m_dcompDevice)));
 }

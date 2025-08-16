@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Constants.hpp"
-#include "ui/components/IComponent.hpp"
+#include "ui/Constants.hpp"
+#include "ui/components/Component.hpp"
+#include "engine/RenderTarget.hpp"
 
 #include <Windows.h>
 #include <d2d1_2.h>
@@ -19,7 +20,7 @@ public:
 		HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius,
 		bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor,
 		const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor,
-		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const GraphicsDevice& device
+		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const RenderTarget& target
 	);
 
 	~ButtonComponent();
@@ -39,7 +40,6 @@ protected:
 protected:
 	std::wstring m_text;
 	D2D1_RECT_F m_bounds;
-	RECT m_boundsPx;
 	float m_cornerRadius;
 	bool m_borderless;
 	bool m_hovered = false;
@@ -57,8 +57,6 @@ protected:
 	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_borderBrush;
 	Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_textBrush;
 	Microsoft::WRL::ComPtr<IDWriteTextFormat>    m_textFormat;
-
-	ID2D1DeviceContext1* m_context;
 
 	HWND m_button;
 	WNDPROC m_oldProc;

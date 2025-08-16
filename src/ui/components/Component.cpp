@@ -1,6 +1,6 @@
-#include "IComponent.hpp"
+#include "Component.hpp"
 
-Component::Component(const GraphicsDevice& device) : m_context(device.Context()) {
+Component::Component(ID2D1DeviceContext1* context) : m_context(context) {
 	m_context->CreateCommandList(&m_commandList);
 }
 

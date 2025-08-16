@@ -4,26 +4,20 @@ ButtonComponent::ButtonComponent(
 	HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius, 
 	bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor, 
 	const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor, 
-	Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const GraphicsDevice& device
-) : Component(device), m_text(text), m_bounds(bounds), m_cornerRadius(cornerRadius), m_borderless(borderless), 
+	Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const RenderTarget& target
+) : Component(target.Context()), m_text(text), m_bounds(bounds), m_cornerRadius(cornerRadius), m_borderless(borderless), 
 	m_defaultColor(defaultColor), m_clickedColor(clickedColor), m_hoveredColor(hoveredColor), 
-	m_borderColor(borderColor), m_textColor(textColor), m_textFormat(std::move(textFormat)), 
-	m_context(device.Context()) { 
+	m_borderColor(borderColor), m_textColor(textColor), m_textFormat(std::move(textFormat)) { 
 
-	m_context->CreateSolidColorBrush(m_defaultColor, &m_defaultBrush);
-	m_context->CreateSolidColorBrush(m_clickedColor, &m_clickedBrush); 
-	m_context->CreateSolidColorBrush(m_hoveredColor, &m_hoveredBrush); 
-	m_context->CreateSolidColorBrush(m_borderColor, &m_borderBrush); 
-	m_context->CreateSolidColorBrush(m_textColor, &m_textBrush); 
-
-	m_boundsPx.left    = static_cast<long>(ceil(bounds.left)); 
-	m_boundsPx.top     = static_cast<long>(ceil(bounds.top)); 
-	m_boundsPx.right   = static_cast<long>(floor(bounds.right)); 
-	m_boundsPx.bottom  = static_cast<long>(floor(bounds.bottom)); 
+	HR_LOG(m_context->CreateSolidColorBrush(m_defaultColor, &m_defaultBrush));
+	HR_LOG(m_context->CreateSolidColorBrush(m_clickedColor, &m_clickedBrush)); 
+	HR_LOG(m_context->CreateSolidColorBrush(m_hoveredColor, &m_hoveredBrush)); 
+	HR_LOG(m_context->CreateSolidColorBrush(m_borderColor, &m_borderBrush)); 
+	HR_LOG(m_context->CreateSolidColorBrush(m_textColor, &m_textBrush)); 
 
 	m_button = CreateWindowExW(0, L"BUTTON", nullptr, WS_CHILD | WS_VISIBLE, 
-		m_boundsPx.left, m_boundsPx.top, m_boundsPx.right - m_boundsPx.left, 
-		m_boundsPx.bottom - m_boundsPx.top, parent, 0, 
+		m_bounds.left, m_bounds.top, m_bounds.right - m_bounds.left, 
+		m_bounds.bottom - m_bounds.top, parent, 0, 
 		GetModuleHandle(nullptr), nullptr); 
 
 	SetWindowLongPtrW(m_button, GWLP_USERDATA, reinterpret_cast<intptr_t>(this)); 
@@ -42,7 +36,7 @@ HWND ButtonComponent::GetHandle() const noexcept {
 
 void ButtonComponent::SetText(const std::wstring& newText) { 
 	m_text = newText; 
-	InvalidateRect(GetParent(m_button), &m_boundsPx, false);
+	m_needsRedraw = true;
 } 
 
 void ButtonComponent::SetOnClick(std::function<void()> handler) { 
@@ -51,7 +45,7 @@ void ButtonComponent::SetOnClick(std::function<void()> handler) {
 
 void ButtonComponent::Draw() const {
 	using UI::General::strokeWidth;
-	static const float offset = strokeWidth / 2.0f;
+	static constexpr float offset = strokeWidth / 2.0f;
 
 	D2D1_RECT_F rect = D2D1::RectF(m_bounds.left, m_bounds.top, m_bounds.right, m_bounds.bottom);
 	D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(rect, m_cornerRadius, m_cornerRadius);
@@ -111,20 +105,17 @@ void ButtonComponent::OnMouseMove(HWND window) {
 		tme.hwndTrack = window; 
 		TrackMouseEvent(&tme); 
 		m_hovered = true; 
-		InvalidateRect(GetParent(window), &m_boundsPx, false); 
 		m_needsRedraw = true;
 	} 
 } 
 
 void ButtonComponent::OnMouseLeave(HWND window) { 
-	m_hovered = false; 
-	InvalidateRect(GetParent(window), &m_boundsPx, false);
+	m_hovered = false;
 	m_needsRedraw = true;
 } 
 
 void ButtonComponent::OnLButtonDown(HWND window) { 
 	m_clicked = true; 
-	InvalidateRect(GetParent(window), &m_boundsPx, false);
 	SetFocus(GetParent(window));
 	m_needsRedraw = true;
 } 
@@ -132,7 +123,6 @@ void ButtonComponent::OnLButtonDown(HWND window) {
 void ButtonComponent::OnLButtonUp(HWND window) { 
 	m_clicked = false; 
 	if (m_onClick) m_onClick(); 
-	InvalidateRect(GetParent(window), &m_boundsPx, false);
 	SetFocus(GetParent(window));
 	m_needsRedraw = true;
 }

@@ -15,10 +15,10 @@ void RectComponent::Draw() const {
 	m_context->SetTransform(D2D1::Matrix3x2F::Identity());
 }
 
-BgComponent::BgComponent(const GraphicsDevice& device)
-	: Component(device), m_bgRect(device.Context(),
-		device.GetBrush(GraphicsDevice::BrushType::Background),
-		device.GetBrush(GraphicsDevice::BrushType::Border),
+BgComponent::BgComponent(const RenderTarget& target) : 
+	Component(target.Context()), m_bgRect(target.Context(), 
+		target.GetBrush(RenderTarget::BrushType::Background), 
+		target.GetBrush(RenderTarget::BrushType::Border), 
 		UI::MainWindow::d2dWindowRect) 
 {}
 
@@ -26,10 +26,10 @@ void BgComponent::Draw() const {
 	m_bgRect.Draw();
 }
 
-GridComponent::GridComponent(const GraphicsDevice& device) : 
-	Component(device), m_gridRect(device.Context(),
-		device.GetBrush(GraphicsDevice::BrushType::Background),
-		device.GetBrush(GraphicsDevice::BrushType::Border),
+GridComponent::GridComponent(const RenderTarget& target) : 
+	Component(target.Context()), m_gridRect(target.Context(),
+		target.GetBrush(RenderTarget::BrushType::Background),
+		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::MainWindow::d2dGameField) 
 {}
 
@@ -37,15 +37,28 @@ void GridComponent::Draw() const {
 	m_gridRect.Draw();
 }
 
-GOBgComponent::GOBgComponent(const GraphicsDevice& device) 
-	: RectComponent(device.Context(),
-		device.GetBrush(GraphicsDevice::BrushType::Background),
-		device.GetBrush(GraphicsDevice::BrushType::Border),
+SideBgComponent::SideBgComponent(const RenderTarget& target, int score) : 
+	Component(target.Context()), m_score(score), 
+	m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)), m_bgRect(target.Context(),
+		target.GetBrush(RenderTarget::BrushType::Background),
+		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::GameOver::gameOverRect) 
 {}
 
-TitleBarComponent::TitleBarComponent(const GraphicsDevice& device) : 
-	Component(device), m_graphicsDevice(device) {
+void SideBgComponent::Draw() const {
+	m_bgRect.Draw();
+
+	std::wstring text = L"Game Over!\nScore: " + std::to_wstring(m_score) 
+		+ L"\nHigh Score: " + std::to_wstring(GameField::GetHighScore());
+
+	m_context->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
+		GraphicsDevice::TextFormat(), UI::GameOver::textRect, m_textBrush);
+}
+
+TitleBarComponent::TitleBarComponent(const RenderTarget& target) : Component(target.Context()), 
+	m_uiBrush(target.GetBrush(RenderTarget::BrushType::UI)), 
+	m_borderBrush(target.GetBrush(RenderTarget::BrushType::Border)) {
+
 	using UI::General::strokeWidth;
 	using UI::General::scaleFactor;
 	using UI::MainWindow::cornerRadius;
@@ -59,7 +72,7 @@ TitleBarComponent::TitleBarComponent(const GraphicsDevice& device) :
 
 	Microsoft::WRL::ComPtr<ID2D1GeometrySink> sink;
 
-	m_graphicsDevice.Factory()->CreatePathGeometry(const_cast<ID2D1PathGeometry**>(m_path.GetAddressOf()));
+	GraphicsDevice::Factory()->CreatePathGeometry(const_cast<ID2D1PathGeometry**>(m_path.GetAddressOf()));
 	m_path->Open(&sink);
 	sink->BeginFigure(D2D1::Point2F(left, bottom), D2D1_FIGURE_BEGIN_FILLED);
 	sink->AddLine(D2D1::Point2F(left, top + cornerRadius));
@@ -87,23 +100,21 @@ void TitleBarComponent::Draw() const {
 	static const float bottom  = tbHeight + 2.0f * scaleFactor;
 	static const float offset  = strokeWidth * 0.5f;
 
-	m_graphicsDevice.Context()->FillGeometry(m_path.Get(), m_graphicsDevice.GetBrush(GraphicsDevice::BrushType::UI));
-	m_graphicsDevice.Context()->SetTransform(D2D1::Matrix3x2F::Translation(offset, offset));
-	m_graphicsDevice.Context()->DrawLine(D2D1::Point2F(0.0f, bottom), D2D1::Point2F(right, bottom),
-		m_graphicsDevice.GetBrush(GraphicsDevice::BrushType::Border), strokeWidth);
-
-	m_graphicsDevice.Context()->SetTransform(D2D1::Matrix3x2F::Identity());
+	m_context->FillGeometry(m_path.Get(), m_uiBrush);
+	m_context->SetTransform(D2D1::Matrix3x2F::Translation(offset, offset));
+	m_context->DrawLine(D2D1::Point2F(0.0f, bottom), D2D1::Point2F(right, bottom), m_borderBrush, strokeWidth);
+	m_context->SetTransform(D2D1::Matrix3x2F::Identity());
 }
 
-PreviewComponent::PreviewComponent(const GameField& field, const GraphicsDevice& device) :
-	Component(device), m_gameField(field), m_graphicsDevice(device), 
-	m_outerRect(device.Context(),
-		device.GetBrush(GraphicsDevice::BrushType::UI),
-		device.GetBrush(GraphicsDevice::BrushType::Border),
+PreviewComponent::PreviewComponent(const RenderTarget& target, const GameField& field) :
+	Component(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
+	m_outerRect(target.Context(),
+		target.GetBrush(RenderTarget::BrushType::UI),
+		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::MainWindow::d2dNextAreaOut),
-	m_innerRect(device.Context(),
-		device.GetBrush(GraphicsDevice::BrushType::Background),
-		device.GetBrush(GraphicsDevice::BrushType::Border),
+	m_innerRect(target.Context(),
+		target.GetBrush(RenderTarget::BrushType::Background),
+		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::MainWindow::d2dNextAreaIn)
 {}
 
@@ -115,10 +126,9 @@ void PreviewComponent::Draw() const {
 	m_outerRect.Draw();
 	m_innerRect.Draw();
 
-	m_graphicsDevice.Context()->DrawTextW(L"Next:", 5, m_graphicsDevice.TextFormat(),
+	m_context->DrawTextW(L"Next:", 5, GraphicsDevice::TextFormat(),
 		D2D1::RectF(d2dNextAreaOut.rect.left, d2dNextAreaOut.rect.top,
-			d2dNextAreaOut.rect.right, d2dNextAreaIn.rect.top),
-		m_graphicsDevice.GetBrush(GraphicsDevice::BrushType::Text));
+			d2dNextAreaOut.rect.right, d2dNextAreaIn.rect.top), m_textBrush);
 
 	const Tetramino& next = m_gameField.GetNextTetramino();
 	ID2D1Bitmap* bitmap = ResourceManager::GetTetraminoBitmap(next.GetType());
@@ -134,38 +144,36 @@ void PreviewComponent::Draw() const {
 			d2dNextAreaIn.rect.left + offX + (pos.x + 1) * blockSize,
 			d2dNextAreaIn.rect.top + offY + (pos.y + 1) * blockSize
 		);
-		m_graphicsDevice.Context()->DrawBitmap(bitmap, dst);
+		m_context->DrawBitmap(bitmap, dst);
 	}
 }
 
-ScoreComponent::ScoreComponent(const GraphicsDevice& device, const GameField& field) : 
-	Component(device), m_graphicsDevice(device), m_gameField(field), 
-	m_rectComponent(device.Context(),
-		device.GetBrush(GraphicsDevice::BrushType::UI),
-		device.GetBrush(GraphicsDevice::BrushType::Border),
+ScoreComponent::ScoreComponent(const RenderTarget& target, const GameField& field) :
+	Component(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
+	m_rectComponent(target.Context(),
+		target.GetBrush(RenderTarget::BrushType::UI),
+		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::MainWindow::d2dScoreRect) 
 {}
 
 void ScoreComponent::Draw() const {
 	m_rectComponent.Draw();
 	std::wstring text = L"Score: " + std::to_wstring(m_gameField.GetScore());
-	m_graphicsDevice.Context()->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
-		m_graphicsDevice.TextFormat(), UI::MainWindow::d2dScoreRect.rect,
-		m_graphicsDevice.GetBrush(GraphicsDevice::BrushType::Text));
+	m_context->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
+		GraphicsDevice::TextFormat(), UI::MainWindow::d2dScoreRect.rect, m_textBrush);
 }
 
-HighScoreComponent::HighScoreComponent(const GraphicsDevice& device, const GameField& field) :
-	Component(device), m_graphicsDevice(device), m_gameField(field), 
-	m_rectComponent(device.Context(),
-		device.GetBrush(GraphicsDevice::BrushType::UI),
-		device.GetBrush(GraphicsDevice::BrushType::Border),
+HighScoreComponent::HighScoreComponent(const RenderTarget& target, const GameField& field) :
+	Component(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
+	m_rectComponent(target.Context(),
+		target.GetBrush(RenderTarget::BrushType::UI),
+		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::MainWindow::d2dHighRect) 
 {}
 
 void HighScoreComponent::Draw() const {
 	m_rectComponent.Draw();
 	std::wstring text = L"High: " + std::to_wstring(m_gameField.GetHighScore());
-	m_graphicsDevice.Context()->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
-		m_graphicsDevice.TextFormat(), UI::MainWindow::d2dHighRect.rect,
-		m_graphicsDevice.GetBrush(GraphicsDevice::BrushType::Text));
+	m_context->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
+		GraphicsDevice::TextFormat(), UI::MainWindow::d2dHighRect.rect, m_textBrush);
 }

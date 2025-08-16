@@ -3,10 +3,10 @@
 #include "core/Base.hpp"
 #include "ui/Constants.hpp"
 #include "GameOverWindow.hpp"
-#include "engine/Renderer.hpp"
+#include "engine/MainRenderer.hpp"
+#include "engine/SideRenderer.hpp"
 #include "engine/GraphicsDevice.hpp"
 #include "controller/GameController.hpp"
-#include "engine/SceneBuilder.hpp"
 
 #include <memory>
 
@@ -27,12 +27,9 @@ private:
 	void OnCreate();
 	void OnDestroy();
 	void OnGameOver();
+	void OnPause(ButtonComponent* button);
 private:
-	GraphicsDevice                m_graphicsDevice;
-	GameController                m_gameController;
-
-	std::unique_ptr<SceneBuilder> m_builder;
-	std::unique_ptr<Renderer>     m_renderer;
-
-	static constexpr uint32_t     WM_APP_GAMEOVER = WM_APP + 1;
+	GameController                 m_gameController;
+	std::unique_ptr<MainRenderer>  m_renderer;
+	static constexpr uint32_t      WM_APP_GAMEOVER = WM_APP + 1;
 };

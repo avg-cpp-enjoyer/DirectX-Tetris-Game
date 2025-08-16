@@ -1,10 +1,11 @@
 #pragma once
 
-#include "IComponent.hpp"
+#include "Component.hpp"
 #include "ui/Constants.hpp"
-#include "ui/Button.hpp"
+#include "Button.hpp"
 #include "engine/GraphicsDevice.hpp"
 #include "engine/ResourceManager.hpp"
+#include "engine/RenderTarget.hpp"
 #include "model/GameField.hpp"
 
 class RectComponent {
@@ -23,7 +24,7 @@ private:
 
 class BgComponent : public Component {
 public: 
-	explicit BgComponent(const GraphicsDevice& device);
+	explicit BgComponent(const RenderTarget& target);
 	void Draw() const override;
 private:
 	RectComponent m_bgRect;
@@ -31,52 +32,59 @@ private:
 
 class GridComponent : public Component {
 public: 
-	explicit GridComponent(const GraphicsDevice& device);
+	explicit GridComponent(const RenderTarget& target);
 	void Draw() const override;
 private:
 	RectComponent m_gridRect;
 };
 
-class GOBgComponent : public RectComponent {
-public: explicit GOBgComponent(const GraphicsDevice& device);
+class SideBgComponent : public Component {
+public: 
+	SideBgComponent(const RenderTarget& target, int score);
+	void Draw() const override;
+private:
+	int m_score;
+	ID2D1SolidColorBrush* m_textBrush;
+	RectComponent m_bgRect;
 };
 
 class TitleBarComponent : public Component {
 public:
-	TitleBarComponent(const GraphicsDevice& device);
+	explicit TitleBarComponent(const RenderTarget& target);
 	void Draw() const override;
 private:
-	const GraphicsDevice& m_graphicsDevice;
+	ID2D1SolidColorBrush* m_uiBrush;
+	ID2D1SolidColorBrush* m_borderBrush;
 	Microsoft::WRL::ComPtr<ID2D1PathGeometry> m_path;
 };
 
 class PreviewComponent : public Component {
 public:
-	PreviewComponent(const GameField& field, const GraphicsDevice& device);
+	PreviewComponent(const RenderTarget& target, const GameField& field);
 	void Draw() const override;
 private:
 	const GameField& m_gameField;
 	RectComponent m_innerRect;
 	RectComponent m_outerRect;
-	const GraphicsDevice& m_graphicsDevice;
+	ID2D1SolidColorBrush* m_textBrush;
 };
 
 class ScoreComponent : public Component {
 public:
-	ScoreComponent(const GraphicsDevice& device, const GameField& field);
+	ScoreComponent(const RenderTarget& target, const GameField& field);
 	void Draw() const override;
 private:
-	const GraphicsDevice& m_graphicsDevice;
 	const GameField& m_gameField;
 	RectComponent m_rectComponent;
+	ID2D1SolidColorBrush* m_textBrush;
 };
 
 class HighScoreComponent : public Component {
 public:
-	HighScoreComponent(const GraphicsDevice& device, const GameField& field);
+	HighScoreComponent(const RenderTarget& target, const GameField& field);
 	void Draw() const override;
 private:
-	const GraphicsDevice& m_graphicsDevice;
 	const GameField& m_gameField;
 	RectComponent m_rectComponent;
+	ID2D1SolidColorBrush* m_textBrush;
 };
