@@ -1,3 +1,5 @@
+#pragma once
+
 #include "TetraminoTypes.hpp"
 #include "Tetramino.hpp"
 

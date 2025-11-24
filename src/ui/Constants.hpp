@@ -31,8 +31,6 @@ namespace UI {
 
 	namespace MainWindow {
 		namespace GameField {
-			inline constexpr int gfWidth = 10;
-			inline constexpr int gfHeight = 20;
 			inline float cornerRadius;
 			inline float blockSize;
 			inline float offsetX;
@@ -90,6 +88,7 @@ namespace UI {
 		inline constexpr int tetramioId     = 11;
 		inline constexpr int ghostId        = 12;
 		inline constexpr int blockGridId    = 13;
+		inline constexpr int tetraminoId    = 14;
 	}
 
 	namespace GameOver {

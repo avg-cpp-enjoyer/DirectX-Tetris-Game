@@ -1,4 +1,20 @@
 #include "UIComponents.hpp"
+#include "Component.hpp"
+
+#include <d2d1_2.h>
+#include <d2d1.h>
+#include <d2d1helper.h>
+#include <engine/RenderTarget.hpp>
+#include <ui/Constants.hpp>
+#include <model/GameField.hpp>
+#include <cstdint>
+#include <string>
+#include <engine/GraphicsDevice.hpp>
+#include <wrl/client.h>
+#include <engine/ResourceManager.hpp>
+#include <model/Tetramino.hpp>
+#include <core/vec2.hpp>
+#include <dcommon.h>
 
 RectComponent::RectComponent(
 	ID2D1DeviceContext1* context, ID2D1SolidColorBrush* bgBrush, 
@@ -16,7 +32,7 @@ void RectComponent::Draw() const {
 }
 
 BgComponent::BgComponent(const RenderTarget& target) : 
-	Component(target.Context()), m_bgRect(target.Context(), 
+	I2DGraphicsComponent(target.Context()), m_bgRect(target.Context(), 
 		target.GetBrush(RenderTarget::BrushType::Background), 
 		target.GetBrush(RenderTarget::BrushType::Border), 
 		UI::MainWindow::d2dWindowRect) 
@@ -27,7 +43,7 @@ void BgComponent::Draw() const {
 }
 
 GridComponent::GridComponent(const RenderTarget& target) : 
-	Component(target.Context()), m_gridRect(target.Context(),
+	I2DGraphicsComponent(target.Context()), m_gridRect(target.Context(),
 		target.GetBrush(RenderTarget::BrushType::Background),
 		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::MainWindow::d2dGameField) 
@@ -37,15 +53,15 @@ void GridComponent::Draw() const {
 	m_gridRect.Draw();
 }
 
-SideBgComponent::SideBgComponent(const RenderTarget& target, int score) : 
-	Component(target.Context()), m_score(score), 
+GameOverBgComponent::GameOverBgComponent(const RenderTarget& target, int score) : 
+	I2DGraphicsComponent(target.Context()), m_score(score), 
 	m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)), m_bgRect(target.Context(),
 		target.GetBrush(RenderTarget::BrushType::Background),
 		target.GetBrush(RenderTarget::BrushType::Border),
 		UI::GameOver::gameOverRect) 
 {}
 
-void SideBgComponent::Draw() const {
+void GameOverBgComponent::Draw() const {
 	m_bgRect.Draw();
 
 	std::wstring text = L"Game Over!\nScore: " + std::to_wstring(m_score) 
@@ -55,7 +71,8 @@ void SideBgComponent::Draw() const {
 		GraphicsDevice::TextFormat(), UI::GameOver::textRect, m_textBrush);
 }
 
-TitleBarComponent::TitleBarComponent(const RenderTarget& target) : Component(target.Context()), 
+TitleBarComponent::TitleBarComponent(const RenderTarget& target) : 
+	I2DGraphicsComponent(target.Context()), 
 	m_uiBrush(target.GetBrush(RenderTarget::BrushType::UI)), 
 	m_borderBrush(target.GetBrush(RenderTarget::BrushType::Border)) {
 
@@ -107,7 +124,9 @@ void TitleBarComponent::Draw() const {
 }
 
 PreviewComponent::PreviewComponent(const RenderTarget& target, const GameField& field) :
-	Component(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
+	I2DGraphicsComponent(target.Context()), 
+	m_gameField(field), 
+	m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
 	m_outerRect(target.Context(),
 		target.GetBrush(RenderTarget::BrushType::UI),
 		target.GetBrush(RenderTarget::BrushType::Border),
@@ -119,6 +138,7 @@ PreviewComponent::PreviewComponent(const RenderTarget& target, const GameField& 
 {}
 
 void PreviewComponent::Draw() const {
+	using namespace UI::MainWindow::GameField;
 	using UI::MainWindow::Preview::offsets;
 	using UI::MainWindow::d2dNextAreaIn;
 	using UI::MainWindow::d2dNextAreaOut;
@@ -137,7 +157,7 @@ void PreviewComponent::Draw() const {
 		float offX = it->second.x;
 		float offY = it->second.y;
 
-		vec2 pos = next.GetPos() + block;
+		float2 pos = next.GetPos() + block;
 		D2D1_RECT_F dst = D2D1::RectF(
 			d2dNextAreaIn.rect.left + offX + pos.x * blockSize,
 			d2dNextAreaIn.rect.top + offY + pos.y * blockSize,
@@ -149,7 +169,7 @@ void PreviewComponent::Draw() const {
 }
 
 ScoreComponent::ScoreComponent(const RenderTarget& target, const GameField& field) :
-	Component(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
+	I2DGraphicsComponent(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
 	m_rectComponent(target.Context(),
 		target.GetBrush(RenderTarget::BrushType::UI),
 		target.GetBrush(RenderTarget::BrushType::Border),
@@ -158,13 +178,13 @@ ScoreComponent::ScoreComponent(const RenderTarget& target, const GameField& fiel
 
 void ScoreComponent::Draw() const {
 	m_rectComponent.Draw();
-	std::wstring text = L"Score: " + std::to_wstring(m_gameField.GetScore());
+	const std::wstring& text = L"Score: " + std::to_wstring(m_gameField.GetScore());
 	m_context->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
 		GraphicsDevice::TextFormat(), UI::MainWindow::d2dScoreRect.rect, m_textBrush);
 }
 
 HighScoreComponent::HighScoreComponent(const RenderTarget& target, const GameField& field) :
-	Component(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
+	I2DGraphicsComponent(target.Context()), m_gameField(field), m_textBrush(target.GetBrush(RenderTarget::BrushType::Text)),
 	m_rectComponent(target.Context(),
 		target.GetBrush(RenderTarget::BrushType::UI),
 		target.GetBrush(RenderTarget::BrushType::Border),
@@ -173,7 +193,7 @@ HighScoreComponent::HighScoreComponent(const RenderTarget& target, const GameFie
 
 void HighScoreComponent::Draw() const {
 	m_rectComponent.Draw();
-	std::wstring text = L"High: " + std::to_wstring(m_gameField.GetHighScore());
+	const std::wstring& text = L"High: " + std::to_wstring(m_gameField.GetHighScore());
 	m_context->DrawTextW(text.c_str(), static_cast<uint32_t>(text.size()),
 		GraphicsDevice::TextFormat(), UI::MainWindow::d2dHighRect.rect, m_textBrush);
 }

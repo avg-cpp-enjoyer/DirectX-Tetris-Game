@@ -22,7 +22,7 @@ private:
 	const D2D1_ROUNDED_RECT& m_rect;
 };
 
-class BgComponent : public Component {
+class BgComponent : public I2DGraphicsComponent {
 public: 
 	explicit BgComponent(const RenderTarget& target);
 	void Draw() const override;
@@ -30,7 +30,7 @@ private:
 	RectComponent m_bgRect;
 };
 
-class GridComponent : public Component {
+class GridComponent : public I2DGraphicsComponent {
 public: 
 	explicit GridComponent(const RenderTarget& target);
 	void Draw() const override;
@@ -38,9 +38,9 @@ private:
 	RectComponent m_gridRect;
 };
 
-class SideBgComponent : public Component {
+class GameOverBgComponent : public I2DGraphicsComponent {
 public: 
-	SideBgComponent(const RenderTarget& target, int score);
+	GameOverBgComponent(const RenderTarget& target, int score);
 	void Draw() const override;
 private:
 	int m_score;
@@ -48,7 +48,7 @@ private:
 	RectComponent m_bgRect;
 };
 
-class TitleBarComponent : public Component {
+class TitleBarComponent : public I2DGraphicsComponent {
 public:
 	explicit TitleBarComponent(const RenderTarget& target);
 	void Draw() const override;
@@ -58,7 +58,7 @@ private:
 	Microsoft::WRL::ComPtr<ID2D1PathGeometry> m_path;
 };
 
-class PreviewComponent : public Component {
+class PreviewComponent : public I2DGraphicsComponent {
 public:
 	PreviewComponent(const RenderTarget& target, const GameField& field);
 	void Draw() const override;
@@ -69,7 +69,7 @@ private:
 	ID2D1SolidColorBrush* m_textBrush;
 };
 
-class ScoreComponent : public Component {
+class ScoreComponent : public I2DGraphicsComponent {
 public:
 	ScoreComponent(const RenderTarget& target, const GameField& field);
 	void Draw() const override;
@@ -79,7 +79,7 @@ private:
 	ID2D1SolidColorBrush* m_textBrush;
 };
 
-class HighScoreComponent : public Component {
+class HighScoreComponent : public I2DGraphicsComponent {
 public:
 	HighScoreComponent(const RenderTarget& target, const GameField& field);
 	void Draw() const override;

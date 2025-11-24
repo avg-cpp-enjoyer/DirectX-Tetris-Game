@@ -1,20 +1,18 @@
 #pragma once
 
-#include "ui/Constants.hpp"
-#include "ui/components/Component.hpp"
-#include "engine/RenderTarget.hpp"
-
+#include <ui/components/Component.hpp>
+#include <engine/RenderTarget.hpp>
 #include <Windows.h>
-#include <d2d1_2.h>
 #include <dwrite.h>
 #include <wrl/client.h>
 #include <string>
 #include <functional>
+#include <d2d1.h>
+#include <dcommon.h>
+#include <cstdint>
+#include <cstdarg>
 
-#pragma comment(lib, "d2d1.lib")
-#pragma comment(lib, "dwrite.lib")
-
-class ButtonComponent : public Component {
+class ButtonComponent : public I2DGraphicsComponent {
 public:
 	ButtonComponent(
 		HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius,
@@ -22,7 +20,6 @@ public:
 		const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor,
 		Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const RenderTarget& target
 	);
-
 	~ButtonComponent();
 
 	HWND GetHandle() const noexcept;
@@ -40,6 +37,7 @@ protected:
 protected:
 	std::wstring m_text;
 	D2D1_RECT_F m_bounds;
+	D2D1_ROUNDED_RECT m_roundedRect;
 	float m_cornerRadius;
 	bool m_borderless;
 	bool m_hovered = false;

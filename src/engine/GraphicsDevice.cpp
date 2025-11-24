@@ -1,5 +1,22 @@
 #include "GraphicsDevice.hpp"
 
+#include <dcomp.h>
+#include <dxgi1_2.h>
+#include <wincodec.h>
+#include <d3d11.h>
+#include <d3d11_4.h>
+#include <d2d1_1.h>
+#include <dwrite.h>
+#include <cstdint>
+#include <d3dcommon.h>
+#include <dxgi.h>
+#include <Windows.h>
+#include <d2d1.h>
+
+#include <ui/Constants.hpp>
+#include <core/Utils.hpp>
+#include <wrl/client.h>
+
 void GraphicsDevice::Initialize() {
 	GetInstance().InitD3D();
 	GetInstance().InitD2D();
@@ -82,7 +99,7 @@ void GraphicsDevice::InitD3D() {
 }
 
 void GraphicsDevice::InitD2D() {
-	assert(m_dxgiDevice && "InitD3D() must be called before InitD2D()");
+	ASSERT_TRUE(m_dxgiDevice, "InitD3D() must be called before InitD2D()");
 	D2D1_FACTORY_OPTIONS opts = {};
 #ifdef _DEBUG
 	opts.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;

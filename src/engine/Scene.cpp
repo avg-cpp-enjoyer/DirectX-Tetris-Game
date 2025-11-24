@@ -1,13 +1,12 @@
 ﻿#include "Scene.hpp"
 
+#include <d2d1_2.h>
+#include <ui/components/Component.hpp>
+
 Scene::Scene(ID2D1DeviceContext1* context) : m_context(context) {}
 
-void Scene::Add(int id, std::shared_ptr<Component> component) {
-	m_components.emplace(id, std::move(component));
-}
-
-void Scene::UpdateCommandLists() const {
-	for (const auto& [id, component] : m_components) {
+void Scene::UpdateCommandLists() {
+	m_buffer.ForEach([this](I2DGraphicsComponent* component) -> void {
 		if (component->NeedsRedraw()) {
 			component->ResetCommandList();
 			m_context->SetTarget(component->GetCommandList());
@@ -15,31 +14,22 @@ void Scene::UpdateCommandLists() const {
 			component->GetCommandList()->Close();
 			component->SetRedraw(false);
 		}
-	}
+	});
 }
 
 void Scene::DrawAll() const {
-	for (const auto& [id, component] : m_components) {
+	m_buffer.ForEach([this](const I2DGraphicsComponent* component) -> void {
 		m_context->DrawImage(component->GetCommandList());
-	}
+	});
+}
+
+void Scene::UpdateAll(float dt) {
+	m_buffer.ForEach([dt](I2DGraphicsComponent* component) -> void {
+		component->Update(dt);
+	});
 }
 
 void Scene::Clear() {
-	m_components.clear();
-}
-
-ActiveScene::ActiveScene(ID2D1DeviceContext1* context) : m_context(context) {}
-
-void ActiveScene::Add(std::shared_ptr<Component> component) {
-	m_components.push_back(std::move(component));
-}
-
-void ActiveScene::DrawAll() const {
-	for (const auto& component : m_components) {
-		component->Draw();
-	}
-}
-
-void ActiveScene::Clear() {
-	m_components.clear();
+	m_buffer.Clear();
+	m_lookupTable.clear();
 }

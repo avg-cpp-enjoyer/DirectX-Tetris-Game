@@ -2,32 +2,32 @@
 
 #include <cmath>
 
-class vec2 {
+class float2 {
 public:
 	float x = 0;
 	float y = 0;
 
-	vec2() = default;
-	vec2(float x, float y) : x(x), y(y) {}
-	vec2(const vec2& other) : x(other.x), y(other.y) {}
+	float2() = default;
+	float2(float x, float y) : x(x), y(y) {}
+	float2(const float2& other) : x(other.x), y(other.y) {}
 
-	vec2 operator+(const vec2& other) const {
+	float2 operator+(const float2& other) const {
 		return { x + other.x, y + other.y };
 	}
 
-	vec2 operator-(const vec2& other) const {
+	float2 operator-(const float2& other) const {
 		return { x - other.x, y - other.y };
 	}
 
-	bool operator==(const vec2& other) const {
+	bool operator==(const float2& other) const {
 		return x == other.x && y == other.y;
 	}
 
-	bool operator!=(const vec2& other) const {
+	bool operator!=(const float2& other) const {
 		return !(*this == other);
 	}
 
-	vec2 operator*(float scalar) const {
+	float2 operator*(float scalar) const {
 		return { x * scalar, y * scalar };
 	}
 

@@ -1,19 +1,14 @@
 #include "RenderTarget.hpp"
 
-RenderTarget::RenderTarget(HWND window) : m_window(window), m_frameLatencyWaitable(nullptr) {}
-
-RenderTarget::~RenderTarget() {
-	if (m_frameLatencyWaitable) { 
-		CloseHandle(m_frameLatencyWaitable); 
-		m_frameLatencyWaitable = nullptr; 
-	}
-}
+RenderTarget::~RenderTarget() {}
 
 void RenderTarget::Initialize(
-	IDXGIFactory2* factory, ID3D11Device* d3dDevice, ID2D1Device* d2dDevice,
+	HWND window, IDXGIFactory2* factory, ID3D11Device* d3dDevice, ID2D1Device* d2dDevice,
 	IDCompositionDevice* dcompDevice) {
 	RECT rc{};
-	GetClientRect(m_window, &rc);
+	m_window = window;
+	GetClientRect(window, &rc);
+	m_initialized = true;
 
 	DXGI_SWAP_CHAIN_DESC1 desc{};
 	desc.Width        = rc.right - rc.left;
@@ -21,20 +16,13 @@ void RenderTarget::Initialize(
 	desc.Format       = DXGI_FORMAT_B8G8R8A8_UNORM;
 	desc.SampleDesc   = { 1, 0 };
 	desc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	desc.BufferCount  = 2;
+	desc.BufferCount  = 4;
 	desc.SwapEffect   = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 	desc.Scaling      = DXGI_SCALING_STRETCH;
 	desc.AlphaMode    = DXGI_ALPHA_MODE_PREMULTIPLIED;
-	desc.Flags        = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
 
 	HR_LOG(factory->CreateSwapChainForComposition(d3dDevice, &desc, nullptr, &m_swapChain));
-	HR_LOG(dcompDevice->CreateTargetForHwnd(m_window, true, &m_dcompTarget));
-
-	Microsoft::WRL::ComPtr<IDXGISwapChain2> swapChain2;
-	if (SUCCEEDED(m_swapChain.As(&swapChain2))) {
-		swapChain2->SetMaximumFrameLatency(1);
-		m_frameLatencyWaitable = swapChain2->GetFrameLatencyWaitableObject();
-	}
+	HR_LOG(dcompDevice->CreateTargetForHwnd(window, true, &m_dcompTarget));
 
 	Microsoft::WRL::ComPtr<IDCompositionVisual> visual;
 	HR_LOG(dcompDevice->CreateVisual(&visual));
@@ -47,7 +35,7 @@ void RenderTarget::Initialize(
 	HR_LOG(d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, &baseContext));
 	HR_LOG(baseContext.As(&m_context));
 
-	const float dpi = static_cast<float>(GetDpiForWindow(m_window));
+	const float dpi = static_cast<float>(GetDpiForWindow(window));
 	m_dpiX = m_dpiY = dpi;
 
 	CreateTarget();
@@ -63,7 +51,6 @@ void RenderTarget::CreateTarget() {
 	);
 
 	HR_LOG(m_context->CreateBitmapFromDxgiSurface(dxgiBackBuffer.Get(), &bitmapProps, &m_primaryBitmap));
-
 	m_targetBitmap = m_primaryBitmap.Get();
 	m_context->SetTarget(m_targetBitmap.Get());
 	m_context->SetDpi(m_dpiX, m_dpiY);
@@ -79,7 +66,7 @@ void RenderTarget::Reset() {
 	m_brushes.clear();
 	m_fallbackBrush.Reset();
 
-	Initialize(GraphicsDevice::DXGIFactory(), GraphicsDevice::D3DDevice(), 
+	Initialize(m_window, GraphicsDevice::DXGIFactory(), GraphicsDevice::D3DDevice(), 
 		GraphicsDevice::D2DDevice(), GraphicsDevice::DCompDevice());
 }
 
@@ -106,9 +93,17 @@ ID2D1SolidColorBrush* RenderTarget::GetBrush(BrushType type) const {
 	return m_fallbackBrush.Get();
 }
 
-void RenderTarget::Present() {
+void RenderTarget::BeginRender() {
+	ASSERT_TRUE(m_initialized, "RenderTarget not initialized");
+	m_context->BeginDraw();
+	m_context->Clear(D2D1::ColorF(0, 0, 0, 0));
+}
+
+void RenderTarget::EndRender() {
+	ASSERT_TRUE(m_initialized, "RenderTarget not initialized");
 	long hrEnd = m_context->EndDraw();
 	HR_LOG(hrEnd);
+
 	if (hrEnd == D2DERR_RECREATE_TARGET) {
 		m_context->SetTarget(nullptr);
 		m_primaryBitmap.Reset();
@@ -119,25 +114,27 @@ void RenderTarget::Present() {
 
 	long hrPresent = m_swapChain->Present(1, 0);
 	HR_LOG(hrPresent);
+
 	if (hrPresent == DXGI_ERROR_DEVICE_REMOVED || hrPresent == DXGI_ERROR_DEVICE_RESET) {
 		GraphicsDevice::Reinit();
 		Reset();
 		return;
 	}
+
+	GraphicsDevice::DCompDevice()->Commit();
 }
 
 void RenderTarget::SetTarget() {
+	ASSERT_TRUE(m_initialized, "RenderTarget not initialized");
 	m_context->SetTarget(m_targetBitmap.Get());
 }
 
 ID2D1DeviceContext1* RenderTarget::Context() const {
+	ASSERT_TRUE(m_initialized, "RenderTarget not initialized");
 	return m_context.Get();
 }
 
 IDXGISwapChain1* RenderTarget::SwapChain() const {
+	ASSERT_TRUE(m_initialized, "RenderTarget not initialized");
 	return m_swapChain.Get();
-}
-
-void* RenderTarget::FrameWaitHandle() const {
-	return m_frameLatencyWaitable;
 }

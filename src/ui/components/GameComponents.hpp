@@ -1,28 +1,43 @@
 #pragma once
 
 #include "Component.hpp"
-#include "model/GameField.hpp"
-#include "engine/ResourceManager.hpp"
 
-class TetraminoComponent : public Component {
+#include <engine/RenderTarget.hpp>
+#include <core/vec2.hpp>
+#include <model/GameField.hpp>
+#include <model/TetraminoTypes.hpp>
+#include <model/Tetramino.hpp>
+
+#include <array>
+#include <mutex>
+
+class CurrentTetraminoView : public I2DGraphicsComponent {
 public:
-	TetraminoComponent(const RenderTarget& target, const GameField& field);
-	void Draw() const;
+	CurrentTetraminoView(const RenderTarget& target, GameField& field, std::mutex& gfMutex);
+	void Draw() const override;
+	void Update(float dt) override;
 private:
-	const GameField& m_gameField;
+	const std::array<float2, 4>& m_blocks;
+	const float2& m_visualPos;
+	const TetraminoType& m_type;
+	std::mutex& m_gfMutex;
+	Tetramino& m_tetramino;
 };
 
-class GhostComponent : public Component {
+class GhostTetraminoView : public I2DGraphicsComponent {
 public:
-	GhostComponent(const RenderTarget& target, const GameField& field);
+	GhostTetraminoView(const RenderTarget& target, const GameField& field);
 	void Draw() const override;
 private:
 	const GameField& m_gameField;
+	const Tetramino& m_currentTetramino;
+	const std::array<float2, 4>& m_blocks;
+	const float2& m_visualPos;
 };
 
-class BlockGridComponent : public Component {
+class GameFieldView : public I2DGraphicsComponent {
 public:
-	BlockGridComponent(const RenderTarget& target, const GameField& field);
+	GameFieldView(const RenderTarget& target, const GameField& field);
 	void Draw() const override;
 private:
 	const GameField& m_gameField;

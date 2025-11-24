@@ -1,18 +1,11 @@
 ﻿#pragma once
 
-#include "model/TetraminoTypes.hpp"
-#include "resources/resource.h"
-#include "core/Log.hpp"
-
-#include <Windows.h>
+#include <model/TetraminoTypes.hpp>
 #include <d2d1_1.h>
 #include <wincodec.h>
 #include <wrl/client.h>
-#include <Shlwapi.h>
 #include <unordered_map>
-#include <stdexcept>
-
-#pragma comment(lib, "Shlwapi.lib")
+#include <d2d1.h>
 
 class ResourceManager {
 public:

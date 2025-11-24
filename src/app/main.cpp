@@ -1,6 +1,9 @@
-﻿#include "TetrisWindow.hpp"
+﻿#include "MainWindow.hpp"
 
-int _stdcall wWinMain([[maybe_unused]] _In_ HINSTANCE instance, _In_opt_ HINSTANCE, [[maybe_unused]] _In_ wchar_t* cmdLine, _In_ int cmdShow) {
-	TetrisWindow tetris;
-	tetris.Exec(cmdShow);
+#include <Windows.h>
+#include <sal.h>
+
+int _stdcall wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ wchar_t*, _In_ int cmdShow) {
+	MainWindow win;
+	return win.Exec(cmdShow);
 }

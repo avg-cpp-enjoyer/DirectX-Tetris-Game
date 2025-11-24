@@ -1,50 +1,47 @@
 #pragma once
 
-#include "core/RingBuffer.hpp"
-#include "model/GameField.hpp"
-#include "engine/Scene.hpp"
-#include "ui/components/GameComponents.hpp"
-#include "ui/components/UIComponents.hpp"
+#include <model/GameField.hpp>
+#include <engine/Scene.hpp>
+#include <model/Tetramino.hpp>
 
+#include <mutex>
+#include <ratio>
 #include <chrono>
 #include <thread>
-#include <condition_variable>
 #include <functional>
+#include <cstdint>
+#include <cstdarg>
 
 class GameController {
 public:
-	enum class Command { MoveLeft, MoveRight, MoveDown, Rotate, HardDrop, CommitDrop, Pause };
+	enum class Command { MoveLeft, MoveRight, MoveDown, Rotate, HardDrop, Pause };
 
-	void Start();
+	GameController();
+	void Start(uint32_t threadPriority, uintptr_t affinityMask);
 	void Shutdown();
 	std::mutex& GetGfMutex();
-	void LogicLoop();
 	void ExecuteCommand(Command cmd);
-	void PushCommand(Command cmd);
-	void ClearCommands();
 	bool PauseGame();
-	void OnDrop();
 	GameField& GetGameField();
-	std::atomic<bool>& GetPengingLock();
 	void SetGameOverCallback(std::function<void()> callback);
-	void SetUISceneCallback(std::function<Scene&()> callback);
-	void SetGameSceneCallback(std::function<Scene&()> callback);
-	void GravityStep();
+	void SetSceneCallback(std::function<Scene&()> callback);
 	void StopExecution();
 	void Restart();
 private:
-	std::condition_variable    m_cmdCV;
-	std::mutex                 m_cmdMutex;
-	std::atomic<bool>          m_logicRunning{ false };
-	std::atomic<bool>          m_isPaused{ false };
-	RingBuffer<Command, 128>   m_commands;
-	GameField                  m_gameField;
-	std::mutex                 m_gameFieldMutex;
-	std::atomic<bool>          m_pendingLock{ false };
-	std::thread                m_logicThread;
-	std::function<void()>      m_GameOverCallback;
+	void LogicLoop();
+	void GravityStep();
+	void UpdateAll() const;
+private:
+	GameField m_gameField;
+	Tetramino& m_currentTetramino;
+	std::mutex m_gameFieldMutex;
+	std::thread m_logicThread;
+	std::function<void()> m_GameOverCallback;
+	std::function<Scene&()> m_sceneCallback;
+	bool m_logicRunning = false;
+	bool m_isPaused = false;
+	bool m_pendingLock = false;
 
-	std::function<Scene&()>    m_UISceneCallback;
-	std::function<Scene&()>    m_GameSceneCallback;
-	std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> m_nextTick;
+	std::chrono::time_point<std::chrono::steady_clock, 
+		std::chrono::duration<double, std::nano>> m_nextTick;
 };

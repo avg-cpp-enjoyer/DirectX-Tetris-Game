@@ -3,14 +3,14 @@
 #include <Windows.h>
 #include <cstdint>
 
-template <typename Derived_T>
-class __declspec(novtable) Base {
+template <typename T>
+class __declspec(novtable) Win32Base {
 public:
-	Base() : m_window(nullptr) {}
-	virtual ~Base() = default;
+	Win32Base() : m_window(nullptr) {}
+	virtual ~Win32Base() = default;
 
-	Base(const Base&) = delete;
-	Base& operator=(const Base&) = delete;
+	Win32Base(const Win32Base&) = delete;
+	Win32Base& operator=(const Win32Base&) = delete;
 
 	bool Create(
 		const wchar_t* windowName,
@@ -34,8 +34,8 @@ protected:
 	HWND m_window;
 };
 
-template <typename Derived_T>
-inline bool Base<Derived_T>::Create(
+template <typename T>
+inline bool Win32Base<T>::Create(
 	const wchar_t* windowName,
 	uint32_t style,
 	uint32_t exStyle,
@@ -47,15 +47,16 @@ inline bool Base<Derived_T>::Create(
 	HWND parentWnd,
 	HMENU menu) {
 
-	WNDCLASS wclass = { 0 };
+	WNDCLASSEX wclassex = { 0 };
 
-	wclass.style = CS_HREDRAW | CS_VREDRAW;
-	wclass.lpfnWndProc = Base<Derived_T>::WndProc;
-	wclass.hInstance = GetModuleHandle(nullptr);
-	wclass.lpszClassName = ClassName();
-	wclass.hbrBackground = bgBrush;
+	wclassex.cbSize = sizeof(WNDCLASSEX);
+	wclassex.style = CS_HREDRAW | CS_VREDRAW;
+	wclassex.lpfnWndProc = Win32Base<T>::WndProc;
+	wclassex.hInstance = GetModuleHandle(nullptr);
+	wclassex.lpszClassName = ClassName();
+	wclassex.hbrBackground = bgBrush;
 
-	if (!RegisterClass(&wclass) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
+	if (!RegisterClassEx(&wclassex) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
 		return false;
 	}
 
@@ -68,17 +69,17 @@ inline bool Base<Derived_T>::Create(
 }
 
 
-template <typename Derived_T>
-inline intptr_t Base<Derived_T>::WndProc(HWND window, uint32_t msg, uintptr_t wParam, intptr_t lParam) {
-	Derived_T* self = nullptr;
+template <typename T>
+inline intptr_t Win32Base<T>::WndProc(HWND window, uint32_t msg, uintptr_t wParam, intptr_t lParam) {
+	T* self = nullptr;
 
 	if (msg == WM_NCCREATE) {
 		auto* create = reinterpret_cast<CREATESTRUCT*>(lParam);
-		self = static_cast<Derived_T*>(create->lpCreateParams);
+		self = static_cast<T*>(create->lpCreateParams);
 		SetWindowLongPtr(window, GWLP_USERDATA, reinterpret_cast<intptr_t>(self));
 		self->m_window = window;
 	} else {
-		self = reinterpret_cast<Derived_T*>(GetWindowLongPtr(window, GWLP_USERDATA));
+		self = reinterpret_cast<T*>(GetWindowLongPtr(window, GWLP_USERDATA));
 	}
 
 	if (self) {
@@ -88,7 +89,7 @@ inline intptr_t Base<Derived_T>::WndProc(HWND window, uint32_t msg, uintptr_t wP
 	return DefWindowProc(window, msg, wParam, lParam);
 }
 
-template <typename Derived_T>
-inline HWND Base<Derived_T>::Window() const noexcept {
+template <typename T>
+inline HWND Win32Base<T>::Window() const noexcept {
 	return m_window;
 }

@@ -1,11 +1,27 @@
 ﻿#include "Button.hpp"
+#include "Component.hpp"
+
+#include <ui/Constants.hpp>
+#include <core/Utils.hpp>
+#include <engine/RenderTarget.hpp>
+
+#include <string>
+#include <dcommon.h>
+#include <d2d1.h>
+#include <wrl/client.h>
+#include <dwrite.h>
+#include <utility>
+#include <Windows.h>
+#include <d2d1helper.h>
+#include <functional>
+#include <cstdint>
 
 ButtonComponent::ButtonComponent(
 	HWND parent, const std::wstring& text, const D2D1_RECT_F& bounds, float cornerRadius, 
 	bool borderless, const D2D1_COLOR_F& textColor, const D2D1_COLOR_F& borderColor, 
 	const D2D1_COLOR_F& defaultColor, const D2D1_COLOR_F& clickedColor, const D2D1_COLOR_F& hoveredColor, 
 	Microsoft::WRL::ComPtr<IDWriteTextFormat> textFormat, const RenderTarget& target
-) : Component(target.Context()), m_text(text), m_bounds(bounds), m_cornerRadius(cornerRadius), m_borderless(borderless), 
+) : I2DGraphicsComponent(target.Context()), m_text(text), m_bounds(bounds), m_cornerRadius(cornerRadius), m_borderless(borderless), 
 	m_defaultColor(defaultColor), m_clickedColor(clickedColor), m_hoveredColor(hoveredColor), 
 	m_borderColor(borderColor), m_textColor(textColor), m_textFormat(std::move(textFormat)) { 
 
@@ -21,6 +37,7 @@ ButtonComponent::ButtonComponent(
 		GetModuleHandle(nullptr), nullptr); 
 
 	SetWindowLongPtrW(m_button, GWLP_USERDATA, reinterpret_cast<intptr_t>(this)); 
+	m_roundedRect = D2D1::RoundedRect(m_bounds, m_cornerRadius, m_cornerRadius);
 	m_oldProc = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(m_button, GWLP_WNDPROC, reinterpret_cast<intptr_t>(ButtonProc))); 
 } 
 
@@ -47,15 +64,12 @@ void ButtonComponent::Draw() const {
 	using UI::General::strokeWidth;
 	static constexpr float offset = strokeWidth / 2.0f;
 
-	D2D1_RECT_F rect = D2D1::RectF(m_bounds.left, m_bounds.top, m_bounds.right, m_bounds.bottom);
-	D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(rect, m_cornerRadius, m_cornerRadius);
-
 	ID2D1SolidColorBrush* fillBrush = GetCurrentBrush();
-	m_context->FillRoundedRectangle(roundedRect, fillBrush);
+	m_context->FillRoundedRectangle(m_roundedRect, fillBrush);
 
 	if (!m_borderless) {
 		m_context->SetTransform(D2D1::Matrix3x2F::Translation(offset, offset));
-		m_context->DrawRoundedRectangle(&roundedRect, m_borderBrush.Get(), strokeWidth);
+		m_context->DrawRoundedRectangle(&m_roundedRect, m_borderBrush.Get(), strokeWidth);
 		m_context->SetTransform(D2D1::Matrix3x2F::Identity());
 	}
 

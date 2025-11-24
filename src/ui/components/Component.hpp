@@ -1,15 +1,15 @@
 #pragma once
 
-#include "engine/GraphicsDevice.hpp"
-
 #include <d2d1_1.h>
+#include <d2d1_2.h>
 #include <wrl/client.h>
 
-class __declspec(novtable) Component {
+class __declspec(novtable) I2DGraphicsComponent {
 public:
-	explicit Component(ID2D1DeviceContext1* context);
-	virtual ~Component() = default;
+	explicit I2DGraphicsComponent(ID2D1DeviceContext1* context);
+	virtual ~I2DGraphicsComponent() = default;
 	virtual void Draw() const = 0;
+	virtual void Update(float) {}
 	ID2D1CommandList* GetCommandList() const;
 	void ResetCommandList();
 	void SetRedraw(bool status);

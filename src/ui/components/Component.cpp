@@ -1,22 +1,25 @@
 #include "Component.hpp"
 
-Component::Component(ID2D1DeviceContext1* context) : m_context(context) {
+#include <d2d1_2.h>
+#include <d2d1_1.h>
+
+I2DGraphicsComponent::I2DGraphicsComponent(ID2D1DeviceContext1* context) : m_context(context) {
 	m_context->CreateCommandList(&m_commandList);
 }
 
-ID2D1CommandList* Component::GetCommandList() const {
+ID2D1CommandList* I2DGraphicsComponent::GetCommandList() const {
 	return m_commandList.Get();
 }
 
-void Component::ResetCommandList() {
+void I2DGraphicsComponent::ResetCommandList() {
 	m_commandList.Reset();
 	m_context->CreateCommandList(&m_commandList);
 }
 
-void Component::SetRedraw(bool status) {
+void I2DGraphicsComponent::SetRedraw(bool status) {
 	m_needsRedraw = status; 
 }
 
-bool Component::NeedsRedraw() const {
+bool I2DGraphicsComponent::NeedsRedraw() const {
 	return m_needsRedraw;
 }

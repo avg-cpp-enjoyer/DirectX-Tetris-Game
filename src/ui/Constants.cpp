@@ -1,4 +1,5 @@
 ﻿#include "Constants.hpp"
+#include "model/GameField.hpp"
 
 void UI::Init() {
 	using General::scaleFactor;
@@ -41,9 +42,9 @@ void UI::Init() {
 	MainWindow::uiElemHeight    = 44.0f * General::scaleFactor;
 	MainWindow::uiElemSpacing   = 16.0f * General::scaleFactor;
 
-	MainWindow::btnPosX       = MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize;
-	MainWindow::pauseBtnPosY  = MainWindow::GameField::offsetY + MainWindow::GameField::gfHeight * MainWindow::GameField::blockSize - MainWindow::uiElemHeight * 2 - MainWindow::uiElemSpacing;
-	MainWindow::quitBtnPosY   = MainWindow::GameField::offsetY + MainWindow::GameField::gfHeight * MainWindow::GameField::blockSize - MainWindow::uiElemHeight;
+	MainWindow::btnPosX       = MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize;
+	MainWindow::pauseBtnPosY  = MainWindow::GameField::offsetY + GameField::height * MainWindow::GameField::blockSize - MainWindow::uiElemHeight * 2 - MainWindow::uiElemSpacing;
+	MainWindow::quitBtnPosY   = MainWindow::GameField::offsetY + GameField::height * MainWindow::GameField::blockSize - MainWindow::uiElemHeight;
 
 	MainWindow::d2dWindowRect = D2D1::RoundedRect(D2D1::RectF(0.0f, 0.0f, 
 			static_cast<float>(MainWindow::mwWidth) - 2.0f * scaleFactor, 
@@ -55,17 +56,17 @@ void UI::Init() {
 		D2D1::RectF(
 			MainWindow::GameField::offsetX,
 			MainWindow::GameField::offsetY,
-			MainWindow::GameField::offsetX + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize,
-			MainWindow::GameField::offsetY + MainWindow::GameField::gfHeight * MainWindow::GameField::blockSize
+			MainWindow::GameField::offsetX + GameField::width * MainWindow::GameField::blockSize,
+			MainWindow::GameField::offsetY + GameField::height * MainWindow::GameField::blockSize
 		),
 		MainWindow::GameField::cornerRadius, MainWindow::GameField::cornerRadius
 	);
 
 	MainWindow::d2dScoreRect = D2D1::RoundedRect(
 		D2D1::RectF(
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize,
 			MainWindow::GameField::offsetY + MainWindow::Preview::prHeight + MainWindow::uiElemSpacing,
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize + MainWindow::uiElemWidth,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize + MainWindow::uiElemWidth,
 			MainWindow::GameField::offsetY + MainWindow::Preview::prHeight + MainWindow::uiElemSpacing + MainWindow::uiElemHeight
 		),
 		General::uiCornerRad, General::uiCornerRad
@@ -73,9 +74,9 @@ void UI::Init() {
 
 	MainWindow::d2dHighRect = D2D1::RoundedRect(
 		D2D1::RectF(
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize,
 			MainWindow::GameField::offsetY + MainWindow::Preview::prHeight + MainWindow::uiElemSpacing * 2 + MainWindow::uiElemHeight,
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize + MainWindow::uiElemWidth,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize + MainWindow::uiElemWidth,
 			MainWindow::GameField::offsetY + MainWindow::Preview::prHeight + MainWindow::uiElemSpacing * 2 + MainWindow::uiElemHeight * 2
 		),
 		General::uiCornerRad, General::uiCornerRad
@@ -83,9 +84,9 @@ void UI::Init() {
 
 	MainWindow::d2dNextAreaOut = D2D1::RoundedRect(
 		D2D1::RectF(
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize,
 			MainWindow::GameField::offsetY,
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize + MainWindow::uiElemWidth,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize + MainWindow::uiElemWidth,
 			MainWindow::GameField::offsetY + MainWindow::Preview::prHeight
 		),
 		General::uiCornerRad, General::uiCornerRad
@@ -93,9 +94,9 @@ void UI::Init() {
 
 	MainWindow::d2dNextAreaIn = D2D1::RoundedRect(
 		D2D1::RectF(
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize + MainWindow::Preview::padding,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize + MainWindow::Preview::padding,
 			MainWindow::GameField::offsetY + MainWindow::Preview::topPadding,
-			MainWindow::GameField::offsetX * 2 + MainWindow::GameField::gfWidth * MainWindow::GameField::blockSize + MainWindow::uiElemWidth - MainWindow::Preview::padding,
+			MainWindow::GameField::offsetX * 2 + GameField::width * MainWindow::GameField::blockSize + MainWindow::uiElemWidth - MainWindow::Preview::padding,
 			MainWindow::GameField::offsetY + MainWindow::Preview::prHeight - MainWindow::Preview::padding
 		),
 		General::uiCornerRad, General::uiCornerRad

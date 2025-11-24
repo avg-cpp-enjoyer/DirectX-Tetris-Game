@@ -1,24 +1,24 @@
 ﻿#include "Tetramino.hpp"
 
-Tetramino::Tetramino(TetraminoType type, const vec2& pos) : m_pos(pos), m_type(type), m_visualPos(pos), m_targetPos(pos) {}
+Tetramino::Tetramino(TetraminoType type, const float2& pos) : m_pos(pos), m_type(type), m_visualPos(pos), m_targetPos(pos) {}
 
-TetraminoType Tetramino::GetType() const {
+const TetraminoType& Tetramino::GetType() const {
 	return m_type;
 }
 
-const std::array<vec2, 4>& Tetramino::GetTetramino() const {
+const std::array<float2, 4>& Tetramino::GetTetramino() const {
 	return m_tetramino;
 }
 
-vec2 Tetramino::GetPos() const {
+const float2& Tetramino::GetPos() const {
 	return m_pos;
 }
 
-vec2 Tetramino::GetVisualPos() const {
+const float2& Tetramino::GetVisualPos() const {
 	return m_visualPos;
 }
 
-void Tetramino::SetPos(const vec2& pos) {
+void Tetramino::SetPos(const float2& pos) {
 	m_pos = pos;
 	m_targetPos = pos;
 	m_startPos = pos;
@@ -29,7 +29,7 @@ bool Tetramino::IsDropping() const {
 	return m_isDropping;
 }
 
-void Tetramino::HardDrop(const vec2& ghostPos) {
+void Tetramino::HardDrop(const float2& ghostPos) {
 	m_isDropping = true;
 	m_startPos = m_visualPos;
 	m_targetPos = ghostPos;
@@ -94,7 +94,7 @@ void Tetramino::UpdateAnimation(float deltaTime) {
 	}
 }
 
-Tetramino_I::Tetramino_I() : Tetramino(TetraminoType::TETRAMINO_I, vec2(3.0f, -1.0f)) {
+Tetramino_I::Tetramino_I() : Tetramino(TetraminoType::TETRAMINO_I, float2(3.0f, -1.0f)) {
 	m_tetramino = {{{ 0.0f, 1.0f }, { 1.0f, 1.0f }, { 2.0f, 1.0f }, { 3.0f, 1.0f }}};
 	m_rotationStates = {{
 		{{{ 0.0f, 1.0f }, { 1.0f, 1.0f }, { 2.0f, 1.0f }, { 3.0f, 1.0f }}},
@@ -104,8 +104,7 @@ Tetramino_I::Tetramino_I() : Tetramino(TetraminoType::TETRAMINO_I, vec2(3.0f, -1
 	}};
 }
 
-Tetramino_J::Tetramino_J() : Tetramino(TetraminoType::TETRAMINO_J, vec2(4.0f, 0.0f))
-{
+Tetramino_J::Tetramino_J() : Tetramino(TetraminoType::TETRAMINO_J, float2(4.0f, 0.0f)) {
 	m_tetramino = {{{ 1.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f, 2.0f }, { 0.0f, 2.0f }}};
 	m_rotationStates = {{
 		{{{ 1.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f, 2.0f }, { 0.0f, 2.0f }}},
@@ -115,7 +114,7 @@ Tetramino_J::Tetramino_J() : Tetramino(TetraminoType::TETRAMINO_J, vec2(4.0f, 0.
 	}};
 }
 
-Tetramino_O::Tetramino_O() : Tetramino(TetraminoType::TETRAMINO_O, vec2(4.0f, 0.0f)) {
+Tetramino_O::Tetramino_O() : Tetramino(TetraminoType::TETRAMINO_O, float2(4.0f, 0.0f)) {
 	m_tetramino = {{{ 0.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }}};
 	m_rotationStates = {{
 		{{{ 0.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }}},
@@ -125,7 +124,7 @@ Tetramino_O::Tetramino_O() : Tetramino(TetraminoType::TETRAMINO_O, vec2(4.0f, 0.
 	}};
 }
 
-Tetramino_L::Tetramino_L() : Tetramino(TetraminoType::TETRAMINO_L, vec2(3.0f, 0.0f)) {
+Tetramino_L::Tetramino_L() : Tetramino(TetraminoType::TETRAMINO_L, float2(3.0f, 0.0f)) {
 	m_tetramino = {{{ 1.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f, 2.0f }, { 2.0f, 2.0f }}};
 	m_rotationStates = {{
 		{{{ 1.0f, 0.0f }, { 1.0f, 1.0f }, { 1.0f, 2.0f }, { 2.0f, 2.0f }}},
@@ -135,7 +134,7 @@ Tetramino_L::Tetramino_L() : Tetramino(TetraminoType::TETRAMINO_L, vec2(3.0f, 0.
 	}};
 }
 
-Tetramino_S::Tetramino_S() : Tetramino(TetraminoType::TETRAMINO_S, vec2(3.0f, 0.0f)) {
+Tetramino_S::Tetramino_S() : Tetramino(TetraminoType::TETRAMINO_S, float2(3.0f, 0.0f)) {
 	m_tetramino = {{{ 1.0f, 0.0f}, { 2.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 1.0f }}};
 	m_rotationStates = {{
 		{{{ 1.0f, 0.0f }, { 2.0f, 0.0f }, { 0.0f, 1.0f }, { 1.0f, 1.0f }}},
@@ -145,7 +144,7 @@ Tetramino_S::Tetramino_S() : Tetramino(TetraminoType::TETRAMINO_S, vec2(3.0f, 0.
 	}};
 }
 
-Tetramino_Z::Tetramino_Z() : Tetramino(TetraminoType::TETRAMINO_Z, vec2(3.0f, 0.0f)) {
+Tetramino_Z::Tetramino_Z() : Tetramino(TetraminoType::TETRAMINO_Z, float2(3.0f, 0.0f)) {
 	m_tetramino = {{{ 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 2.0f, 1.0f }}};
 	m_rotationStates = {{
 		{{{ 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 2.0f, 1.0f }}},
@@ -155,7 +154,7 @@ Tetramino_Z::Tetramino_Z() : Tetramino(TetraminoType::TETRAMINO_Z, vec2(3.0f, 0.
 	}};
 }
 
-Tetramino_T::Tetramino_T() : Tetramino(TetraminoType::TETRAMINO_T, vec2(3.0f, -1.0f)) {
+Tetramino_T::Tetramino_T() : Tetramino(TetraminoType::TETRAMINO_T, float2(3.0f, -1.0f)) {
 	m_tetramino = {{{ 0.0f, 1.0f }, { 1.0f, 1.0f }, { 2.0f, 1.0f }, { 1.0f, 2.0f }}};
 	m_rotationStates = {{
 		{{{ 0.0f, 1.0f }, { 1.0f, 1.0f }, { 2.0f, 1.0f }, { 1.0f, 2.0f }}},

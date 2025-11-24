@@ -2,6 +2,7 @@
 
 #include <comdef.h>
 #include <string>
+#include <stdexcept>
 
 #define HR_LOG(expr)                                                                 \
     do {                                                                             \
@@ -37,3 +38,16 @@
             throw std::runtime_error(msg);  \
         }                                   \
     } while (0)
+
+#define ASSERT_TRUE(expr, msg)                                                        \
+    do {                                                                              \
+        if (!(expr)) {                                                                \
+            std::string fullMsg =                                                     \
+                std::string("[ASSERT FAILED] ") + (msg) +                             \
+                "\n  Expression: " + #expr +                                          \
+                "\n  File: " + __FILE__ +                                             \
+                "\n  Line: " + std::to_string(__LINE__) + "\n\n";                     \
+            OutputDebugStringA(fullMsg.c_str());                                      \
+            throw std::runtime_error(fullMsg);                                        \
+        }                                                                             \
+    } while (0)                                   

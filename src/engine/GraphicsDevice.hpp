@@ -1,18 +1,13 @@
 #pragma once
 
-#include "core/Log.hpp"
-#include "ui/Constants.hpp"
-#include "RenderTarget.hpp"
-
+#include <d2d1_1.h>
+#include <d3d11.h>
+#include <dxgi.h>
 #include <wrl/client.h>
-#include <d3d11_4.h>
 #include <dxgi1_2.h>
-#include <d2d1_3.h>
 #include <dcomp.h>
 #include <dwrite.h>
 #include <wincodec.h>
-#include <vector>
-#include <memory>
 
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "Dcomp.lib")
@@ -49,11 +44,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>   m_d3dContext;
 	Microsoft::WRL::ComPtr<IDXGIDevice>           m_dxgiDevice;
 	Microsoft::WRL::ComPtr<IDXGIFactory2>         m_dxgiFactory2;
-
 	Microsoft::WRL::ComPtr<ID2D1Factory1>         m_d2dFactory;
 	Microsoft::WRL::ComPtr<ID2D1Device>           m_d2dDevice;
 	Microsoft::WRL::ComPtr<IDCompositionDevice>   m_dcompDevice;
-
 	Microsoft::WRL::ComPtr<IWICImagingFactory>    m_wicFactory;
 	Microsoft::WRL::ComPtr<IDWriteFactory>        m_writeFactory;
 	Microsoft::WRL::ComPtr<IDWriteTextFormat>     m_textFormat;

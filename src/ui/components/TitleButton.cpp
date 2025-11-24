@@ -20,7 +20,6 @@ TitleButtonComponent::TitleButtonComponent(
 	m_sink->AddLine(D2D1::Point2F(m_bounds.right, m_bounds.bottom));
 	m_sink->AddLine(D2D1::Point2F(m_bounds.left, m_bounds.bottom));
 	m_sink->AddLine(D2D1::Point2F(m_bounds.left, m_bounds.top));
-
 	m_sink->EndFigure(D2D1_FIGURE_END_CLOSED);
 	m_sink->Close();
 }

@@ -1,13 +1,9 @@
 #pragma once
 
-#include <immintrin.h>
+#include <cstdint>
 
 #include "Tetramino.hpp"
-#include "TetraminoManager.hpp"
-#include "HighScoreManager.hpp"
-#include "ui/Constants.hpp"
-
-using namespace UI::MainWindow::GameField;
+#include "TetraminoTypes.hpp"
 
 class GameField {
 public:
@@ -30,16 +26,17 @@ public:
 	bool TetraminoFits(const Tetramino& tetramino) const;
 	void LockTetramino();
 	void UpdateGhostPos();
+public:
+	static constexpr uint8_t width = 10;
+	static constexpr uint8_t height = 20;
 private:
 	void ClearLines();
-	bool IsLineFull(const uint8_t* row);
 	void SpawnNewTetramino();
 private:
-	static constexpr int gfStride = 16;
-	alignas(gfStride) uint8_t m_grid[gfHeight][gfStride]{};
-	Tetramino m_currentTetramino = TetraminoManager::CreateRandomTetramino();
-	Tetramino m_nextTetramino = TetraminoManager::CreateRandomTetramino();
-	Tetramino m_ghostTetramino = TetraminoManager::CreateTetramino(m_currentTetramino.GetType());
+	uint8_t m_grid[height][width]{};
+	Tetramino m_currentTetramino;
+	Tetramino m_nextTetramino;
+	Tetramino m_ghostTetramino;
 	int m_score = 0;
 	bool m_gameOver = false;
 };

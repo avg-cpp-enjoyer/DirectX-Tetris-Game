@@ -1,4 +1,12 @@
 ﻿#include "ResourceManager.hpp"
+#include "resources/resource.h"
+
+#include <core/Utils.hpp>
+#include <Windows.h>
+#include <Shlwapi.h>
+#include <stdexcept>
+#include <cstdint>
+#include <utility>
 
 void ResourceManager::Initialize(ID2D1DeviceContext* context, IWICImagingFactory* wic) {
 	GetInstance().InitializeImpl(context, wic);
@@ -38,7 +46,7 @@ void ResourceManager::LoadTetraminoBitmap(TetraminoType type, const wchar_t* res
 		throw std::runtime_error("Resource not found for TetraminoType");
 	}
 
-	HGLOBAL data = LoadResource(nullptr, resource);
+	void* data = LoadResource(nullptr, resource);
 	if (!data) {
 		throw std::runtime_error("Failed to LoadResource");
 	}
@@ -47,7 +55,7 @@ void ResourceManager::LoadTetraminoBitmap(TetraminoType type, const wchar_t* res
 	DWORD n = SizeofResource(nullptr, resource);
 
 	Microsoft::WRL::ComPtr<IStream> stream;
-	stream.Attach(SHCreateMemStream(reinterpret_cast<const BYTE*>(dataPtr), n));
+	stream.Attach(SHCreateMemStream(reinterpret_cast<const uint8_t*>(dataPtr), n));
 	if (!stream) {
 		throw std::runtime_error("Failed to create memory stream");
 	}
